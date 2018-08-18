@@ -1,0 +1,23 @@
+{
+  "name": "bitmotion/mautic-auth0-bundle",
+  "description": "Auth0 is the solution you need for web, mobile, IoT, and internal applications. Loved by developers and trusted by enterprises.",
+  "license": "GPL-3.0-or-later",
+  "type": "mautic-plugin",
+  "authors": [
+    {
+      "name": "Florian Wessels",
+      "email": "f.wessels@bitmotion.de",
+      "homepage": "https://www.bitmotion.de",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/bitmotion/auth0-for-mautic/issues",
+    "source": "https://github.com/bitmotion/auth0-for-mautic"
+  },
+  "autoload": {
+    "psr-4": {
+      "MauticPlugin\\MauticAuth0Bundle\\": ""
+    }
+  }
+}
