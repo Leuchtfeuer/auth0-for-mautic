@@ -3,6 +3,7 @@
 namespace MauticPlugin\MauticAuth0Bundle\Integration;
 
 
+use Doctrine\ORM\NonUniqueResultException;
 use GuzzleHttp\Client;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\PluginBundle\Integration\AbstractSsoServiceIntegration;
@@ -234,8 +235,14 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
      */
     protected function createMauticUserFromAuth0User()
     {
+        $mauticUser = null;
+
         // Find existing user
-        $mauticUser = $this->userProvider->loadUserByUsername($this->setValueFromAuth0User('auth0_username', 'email'));
+        try {
+            $mauticUser = $this->userProvider->loadUserByUsername($this->setValueFromAuth0User('auth0_username', 'email'));
+        } catch (NonUniqueResultException $exception) {
+            // No User found. Do nothing.
+        }
 
         if (!$mauticUser instanceof User) {
             // Create new user if there is no existing user
