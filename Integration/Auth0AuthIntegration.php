@@ -117,7 +117,7 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
      */
     public function getUser($response)
     {
-        $this->setClient('https://' . $this->keys['domain']);
+        $this->setClient('https://' . rtrim($this->keys['domain'], '/') . '/');
 
         try {
             $userInfo = $this->getUserInfo($response);
@@ -171,7 +171,7 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
     {
         $response = $this->client->request(
             'GET',
-            '/userinfo',
+            'userinfo',
             [
                 'headers' => [
                     'Authorization' => $token['token_type'] . ' ' . $token['access_token'],
@@ -191,13 +191,13 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
     {
         $response = $this->client->request(
             'POST',
-            '/oauth/token',
+            'oauth/token',
             [
                 'form_params' => [
                     'grant_type' => 'client_credentials',
                     'client_id' => $this->keys['client_id'],
                     'client_secret' => $this->keys['client_secret'],
-                    'audience' => 'https://' . $this->keys['domain'] . $this->keys['audience'] . '/'
+                    'audience' => 'https://' . rtrim($this->keys['domain'], '/') . '/' . trim($this->keys['audience'], '/') . '/'
                 ],
                 'http_errors' => false,
             ]
@@ -217,7 +217,7 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
     {
         $response = $this->client->request(
             'GET',
-            $this->keys['audience'] . '/users/' . $userId,
+            trim($this->keys['audience'], '/') . '/users/' . $userId,
             [
                 'headers' => [
                     'Authorization' => $managementToken['token_type'] . ' ' . $managementToken['access_token'],
@@ -240,7 +240,7 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
         // Find existing user
         try {
             $mauticUser = $this->userProvider->loadUserByUsername($this->setValueFromAuth0User('auth0_username', 'email'));
-        } catch (NonUniqueResultException $exception) {
+        } catch (\Exception $exception) {
             // No User found. Do nothing.
         }
 
