@@ -44,5 +44,6 @@ return [
         'auth0_locale' => null,
         'auth0_signature' => null,
         'auth0_position' => null,
+        'auth0_role' => 'app_metadata.mautic.role',
     ],
 ];
