@@ -197,8 +197,7 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
                     'grant_type' => 'client_credentials',
                     'client_id' => $this->keys['client_id'],
                     'client_secret' => $this->keys['client_secret'],
-                    'audience' => 'https://' . rtrim($this->keys['domain'], '/') . '/' . trim($this->keys['audience'],
-                            '/') . '/'
+                    'audience' => 'https://' . rtrim($this->keys['domain'], '/') . '/' . trim($this->keys['audience'], '/') . '/'
                 ],
                 'http_errors' => false,
             ]
@@ -240,8 +239,7 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
 
         // Find existing user
         try {
-            $mauticUser = $this->userProvider->loadUserByUsername($this->setValueFromAuth0User('auth0_username',
-                'email'));
+            $mauticUser = $this->userProvider->loadUserByUsername($this->setValueFromAuth0User('auth0_username', 'email'));
         } catch (\Exception $exception) {
             // No User found. Do nothing.
         }
