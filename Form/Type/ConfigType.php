@@ -3,7 +3,10 @@
 namespace MauticPlugin\MauticAuth0Bundle\Form\Type;
 
 
+use Doctrine\DBAL\Types\BooleanType;
+use Mautic\CoreBundle\Form\DataTransformer\ArrayLinebreakTransformer;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 
@@ -133,6 +136,59 @@ class ConfigType extends AbstractType
                 'required' => false,
             ]
         );
+
+        $builder->add(
+            'auth0_role',
+            TextType::class,
+            [
+                'label' => 'plugin.auth0.integration.type_label.role_path',
+                'label_attr' => [
+                    'class' => 'control-label',
+                ],
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+                'required' => false,
+            ]
+        );
+
+
+        $builder->add(
+            'multiple_roles',
+            'yesno_button_group',
+            [
+                'label' => 'plugin.auth0.integration.type_label.multiple_roles',
+                'label_attr' => [
+                    'class' => 'control-label',
+                ],
+                'attr' => [
+                    'class' => 'form-control',
+                    'data' => (bool)$options['data']['multiple_roles']
+                ],
+                'required' => false,
+            ]
+        );
+        $arrayLinebreakTransformer = new ArrayLinebreakTransformer();
+        $builder->add(
+            $builder->create(
+                'rolemapping',
+                'textarea',
+                [
+                    'label' => 'plugin.auth0.integration.type_label.rolemapping',
+                    'label_attr' => [
+                        'class' => 'control-label',
+                    ],
+                    'attr' => [
+                        'class' => 'form-control',
+                        'tooltip' => 'plugin.auth0.integration.type_label.rolemapping.tooltip',
+                        'rows' => 4,
+                        'data-show-on' => '{"config_auth0config_multiple_roles_1":"checked"}',
+                    ],
+                    'required' => false,
+                ]
+            )->addViewTransformer($arrayLinebreakTransformer)
+        );
+
     }
 
     /**
