@@ -12,7 +12,7 @@ This Mautic plugin allows logins and signups via Auth0.
 5. Go to Settings -> Plugins and click on "Install/Upgrade Plugins"
 6. Choose the Auth0 Plugin, adapt configuration and publish it
 
-There is also the possibility to add this package directly into your project composer.json file by executing following command: `composer require bitmiotion/mautic-auth0-bundle`.
+There is also the possibility to add this package directly into your project composer.json file by executing following command: `composer require bitmotion/mautic-auth0-bundle`.
 
 ### Plugin Configuration
 <table>
