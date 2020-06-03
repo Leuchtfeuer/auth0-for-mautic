@@ -99,7 +99,9 @@ Use dot syntax to access arrays (i.e. `user_metadata.login_name`).
 
 ### Roles
 
-If you want to map a role from auth0 to your Mautic-User you have to alter your app_metadata in your Auth0-User (where `<ROLE_ID>` is the ID of your Mautic-Role):
+If you want to map a role from Auth0 to your Mautic-User you have to alter your app_metadata in your Auth0-User 
+(where `<ROLE_ID>` is the ID of your Mautic-Role):
+
 ```metadata json
 {
     ...
