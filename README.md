@@ -1,18 +1,24 @@
 Auth0 for Mautic
 ================
-![Auth0Mautic](https://www.bitmotion.de/fileadmin/github/auth0-for-mautic/Mautic-Auth0.png "Auth0 for Mautic")
+![Auth0Mautic](https://www.Leuchtfeuer.com/fileadmin/github/auth0-for-mautic/Mautic-Auth0.png "Auth0 for Mautic")
 
-This Mautic plugin allows logins and signups via Auth0.
+[![Latest Stable Version](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/v/stable)](https://packagist.org/packages/leuchtfeuer/mautic-auth0-bundle)
+[![Total Downloads](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/downloads)](https://packagist.org/leuchtfeuer/mautic-auth0-bundle)
+[![Latest Unstable Version](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/v/unstable)](https://packagist.org/leuchtfeuer/mautic-auth0-bundle)
+[![Code Climate](https://codeclimate.com/github/Leuchtfeuer/auth0-for-mautic/badges/gpa.svg)](https://codeclimate.com/github/Leuchtfeuer/auth0-for-mautic)
+[![License](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/license)](https://packagist.org/packages/leuchtfeuer/mautic-auth0-bundle)
+
+This Mautic plugin allows logins and sign ups via Auth0.
 
 ## Installation
 1. Open a Terminal / Console window
 2. Change directory to the mautic root (i.e. `cd /var/www/mautic`)
-3. Clone this repository into plugins/MauticAuth0Bundle (`git clone https://github.com/bitmotion/auth0-for-mautic.git plugins/MauticAuth0Bundle`)
+3. Clone this repository into plugins/MauticAuth0Bundle (`git clone https://github.com/Leuchtfeuer/auth0-for-mautic.git plugins/MauticAuth0Bundle`)
 4. Clear the cache (`php app/console cache:clear`)
 5. Go to Settings -> Plugins and click on "Install/Upgrade Plugins"
-6. Choose the Auth0 Plugin, adapt configuration and publish it
+6. Choose the Auth0 Plugin, adapt the configuration and publish it
 
-There is also the possibility to add this package directly into your project composer.json file by executing following command: `composer require bitmotion/mautic-auth0-bundle`.
+There is also the possibility to add this package directly into your project composer.json file by executing following command: `composer require leuchtfeuer/mautic-auth0-bundle`.
 
 ### Plugin Configuration
 <table>

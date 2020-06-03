@@ -12,7 +12,7 @@
 return [
     'name' => 'Auth0',
     'description' => 'Enables Auth0 login for users.',
-    'version' => '1.0.0',
+    'version' => '1.0.1',
     'author' => 'Florian Wessels',
 
     'services' => [
