@@ -44,5 +44,12 @@ return [
         'auth0_locale' => null,
         'auth0_signature' => null,
         'auth0_position' => null,
+        'auth0_role' => 'app_metadata.roles',
+        'auth0_admin' => 'user_metadata.admin',
+        'multiple_roles' => 1,
+        'rolemapping' => array(
+            '0' => 'admin => 1',
+            '1' => 'users => 2'
+        ),
     ],
 ];

@@ -263,6 +263,15 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
                 $this->getUserRole()
             );
 
+        $auth0Role = $this->setValueFromAuth0User('auth0_role');
+        if ($auth0Role) {
+            $roleRepository = $this->em->getRepository('MauticUserBundle:Role');
+            $mauticRole = $roleRepository->findOneBy(['id' => $auth0Role]);
+            if ($mauticRole) {
+                $mauticUser->setRole($mauticRole);
+            }
+        }
+
         return $mauticUser;
     }
 

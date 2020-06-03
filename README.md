@@ -12,7 +12,7 @@ This Mautic plugin allows logins and signups via Auth0.
 5. Go to Settings -> Plugins and click on "Install/Upgrade Plugins"
 6. Choose the Auth0 Plugin, adapt configuration and publish it
 
-There is also the possibility to add this package directly into your project composer.json file by executing following command: `composer require bitmiotion/mautic-auth0-bundle`.
+There is also the possibility to add this package directly into your project composer.json file by executing following command: `composer require bitmotion/mautic-auth0-bundle`.
 
 ### Plugin Configuration
 <table>
@@ -90,3 +90,15 @@ You can configure the mapping (Auth0 data -> Mautic User data) in the configurat
 </table>
 
 Use dot syntax to access arrays (i.e. `user_metadata.login_name`).
+
+### Roles
+
+If you want to map a role from auth0 to your Mautic-User you have to alter your app_metadata in your Auth0-User (where `<ROLE_ID>` is the ID of your Mautic-Role):
+```metadata json
+{
+    ...
+    "mautic": {
+        "role": <ROLE_ID>
+    }
+}
+```
