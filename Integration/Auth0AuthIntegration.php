@@ -276,7 +276,7 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
     {
         $value = $this->getAuth0ValueRecursive(
             $this->auth0User,
-            explode('.', $this->coreParametersHelper->getParameter($configurationParameter))
+            explode('.', $this->coreParametersHelper->get($configurationParameter))
         );
 
         // Fallback if there is no username

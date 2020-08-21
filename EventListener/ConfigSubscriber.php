@@ -2,16 +2,17 @@
 
 namespace MauticPlugin\MauticAuth0Bundle\EventListener;
 
+
 use Mautic\ConfigBundle\ConfigEvents;
 use Mautic\ConfigBundle\Event\ConfigBuilderEvent;
-use Mautic\CoreBundle\EventListener\CommonSubscriber;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Class ConfigSubscriber
  *
  * @package MauticPlugin\MauticAuth0Bundle\EventListener
  */
-class ConfigSubscriber extends CommonSubscriber
+class ConfigSubscriber implements EventSubscriberInterface
 {
     /**
      * @return array
