@@ -52,5 +52,15 @@
                 <?php echo $view['form']->row($form->children['auth0_locale']); ?>
             </div>
         </div>
+        <hr />
+        <div class="row">
+            <div class="col-md-6">
+                <?php echo $view['form']->row($form->children['auth0_role']); ?>
+                <?php echo $view['form']->row($form->children['multiple_roles']); ?>
+            </div>
+            <div class="col-md-6">
+                <?php echo $view['form']->row($form->children['rolemapping']); ?>
+            </div>
+        </div>
     </div>
 </div>

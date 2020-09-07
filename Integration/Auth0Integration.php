@@ -2,21 +2,19 @@
 
 namespace MauticPlugin\MauticAuth0Bundle\Integration;
 
-
-use Doctrine\ORM\NonUniqueResultException;
 use GuzzleHttp\Client;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
+use Mautic\PluginBundle\Event\PluginIntegrationAuthCallbackUrlEvent;
+use Mautic\PluginBundle\Integration\AbstractIntegration;
 use Mautic\PluginBundle\Integration\AbstractSsoServiceIntegration;
+use Mautic\PluginBundle\PluginEvents;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Security\Provider\UserProvider;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-/**
- * Class Auth0AuthIntegration
- *
- * @package MauticPlugin\MauticAuth0Bundle\Integration
- */
-class Auth0AuthIntegration extends AbstractSsoServiceIntegration
+class Auth0Integration extends AbstractSsoServiceIntegration
 {
+
     /**
      * @var Client
      */
@@ -26,38 +24,28 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
      * @var array
      */
     protected $auth0User = [];
-
     /**
      * @var CoreParametersHelper
      */
-    protected $coreParametersHelper;
-
+    private $coreParametersHelper;
     /**
      * @var UserProvider
      */
-    protected $userProvider;
+    private $userProvider;
 
-    /**
-     * @return string
-     */
     public function getName()
-    {
-        return 'Auth0Auth';
-    }
-
-    /**
-     * @return string
-     */
-    public function getDisplayName()
     {
         return 'Auth0';
     }
 
     /**
+     * Return's authentication method such as oauth2, oauth1a, key, etc.
+     *
      * @return string
      */
     public function getAuthenticationType()
     {
+        // Just use none for now and I'll build in "basic" later
         return 'oauth2';
     }
 
@@ -109,6 +97,22 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
         $this->userProvider = $userProvider;
     }
 
+
+    /**
+     * Set the callback URL to sso_login.
+     */
+    public function getAuthCallbackUrl()
+    {
+        $end = $this->router->generate('mautic_sso_login_check',
+            ['integration' => $this->getName()],
+            true //absolute
+        );
+
+        $start = $this->router->getContext()->getHost();
+
+        return $this->router->getContext()->getScheme(). "://" . $start . $end;
+    }
+
     /**
      * @param array $response
      *
@@ -135,7 +139,6 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
 
         return false;
     }
-
     /**
      * @param $data
      * @param $keys
@@ -182,6 +185,8 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
 
         return \GuzzleHttp\json_decode($response, true);
     }
+
+
 
     /**
      * @return mixed
