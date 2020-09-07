@@ -9,8 +9,6 @@
  * @license     GNU/GPLv3 http://www.gnu.org/licenses/gpl-3.0.html
  */
 
-use MauticPlugin\MauticAuth0Bundle\Integration\Auth0Integration;
-
 return [
     'name' => 'Auth0',
     'description' => 'Enables Auth0 login for users.',
@@ -30,7 +28,7 @@ return [
         ],
         'integrations' => [
             'mautic.integration.auth0' => [
-                'class' => Auth0Integration::class,
+                'class' => \MauticPlugin\MauticAuth0Bundle\Integration\Auth0Integration::class,
                 'arguments' => [
                     'event_dispatcher',
                     'mautic.helper.cache_storage',

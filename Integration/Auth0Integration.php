@@ -24,14 +24,16 @@ class Auth0Integration extends AbstractSsoServiceIntegration
      * @var array
      */
     protected $auth0User = [];
+
     /**
      * @var CoreParametersHelper
      */
-    private $coreParametersHelper;
+    protected $coreParametersHelper;
+
     /**
      * @var UserProvider
      */
-    private $userProvider;
+    protected $userProvider;
 
     public function getName()
     {
