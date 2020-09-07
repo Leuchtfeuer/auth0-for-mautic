@@ -1,5 +1,5 @@
-Auth0 for Mautic
-================
+Auth0 for Mautic 3
+==================
 ![Auth0Mautic](https://www.bitmotion.de/fileadmin/github/auth0-for-mautic/Mautic-Auth0.png "Auth0 for Mautic")
 
 This Mautic plugin allows logins and signups via Auth0.
@@ -90,3 +90,8 @@ You can configure the mapping (Auth0 data -> Mautic User data) in the configurat
 </table>
 
 Use dot syntax to access arrays (i.e. `user_metadata.login_name`).
+
+## Update from Mautic 2.x.x to Mautic 3.x.x
+When Updating the Plugin, you have to make sure to change the Callback-URL(s) in Auth0. 
+
+The new Callback-URLs end in `.../s/sso_login/Auth0` instead of `.../s/sso_login/Auth0Auth`
