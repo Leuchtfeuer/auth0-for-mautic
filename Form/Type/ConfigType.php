@@ -3,11 +3,9 @@
 namespace MauticPlugin\MauticAuth0Bundle\Form\Type;
 
 
-use Doctrine\DBAL\Types\BooleanType;
 use Mautic\CoreBundle\Form\DataTransformer\ArrayLinebreakTransformer;
 use Mautic\CoreBundle\Form\Type\YesNoButtonGroupType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;

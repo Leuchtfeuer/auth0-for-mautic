@@ -4,13 +4,9 @@ namespace MauticPlugin\MauticAuth0Bundle\Integration;
 
 use GuzzleHttp\Client;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
-use Mautic\PluginBundle\Event\PluginIntegrationAuthCallbackUrlEvent;
-use Mautic\PluginBundle\Integration\AbstractIntegration;
 use Mautic\PluginBundle\Integration\AbstractSsoServiceIntegration;
-use Mautic\PluginBundle\PluginEvents;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Security\Provider\UserProvider;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class Auth0Integration extends AbstractSsoServiceIntegration
 {
@@ -269,6 +265,15 @@ class Auth0Integration extends AbstractSsoServiceIntegration
             ->setRole(
                 $this->getUserRole()
             );
+
+        $auth0Role = $this->setValueFromAuth0User('auth0_role');
+        if ($auth0Role) {
+            $roleRepository = $this->em->getRepository('MauticUserBundle:Role');
+            $mauticRole = $roleRepository->findOneBy(['id' => $auth0Role]);
+            if ($mauticRole) {
+                $mauticUser->setRole($mauticRole);
+            }
+        }
 
         return $mauticUser;
     }
