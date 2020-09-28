@@ -100,14 +100,15 @@ class Auth0Integration extends AbstractSsoServiceIntegration
      */
     public function getAuthCallbackUrl()
     {
-        $end = $this->router->generate('mautic_sso_login_check',
-            ['integration' => $this->getName()],
-            true //absolute
+        return sprintf(
+            "%s://%s%s",
+            $this->router->getContext()->getScheme(),
+            $this->router->getContext()->getHost(),
+            $this->router->generate('mautic_sso_login_check',
+                ['integration' => $this->getName()],
+                true //absolute
+            )
         );
-
-        $start = $this->router->getContext()->getHost();
-
-        return $this->router->getContext()->getScheme(). "://" . $start . $end;
     }
 
     /**
