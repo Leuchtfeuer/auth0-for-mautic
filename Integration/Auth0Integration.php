@@ -43,7 +43,6 @@ class Auth0Integration extends AbstractSsoServiceIntegration
      */
     public function getAuthenticationType()
     {
-        // Just use none for now and I'll build in "basic" later
         return 'oauth2';
     }
 
