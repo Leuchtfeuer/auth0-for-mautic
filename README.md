@@ -1,5 +1,5 @@
-Auth0 for Mautic 3
-==================
+Auth0 for Mautic
+================
 ![Auth0Mautic](https://www.bitmotion.de/fileadmin/github/auth0-for-mautic/Mautic-Auth0.png "Auth0 for Mautic")
 
 
@@ -113,6 +113,4 @@ If you want to map a role from Auth0 to your Mautic-User you have to alter your 
 ```
 
 ## Update from Mautic 2.x.x to Mautic 3.x.x
-When Updating the Plugin, you have to make sure to change the Callback-URL(s) in Auth0. 
-
-The new Callback-URLs end in `.../s/sso_login/Auth0` instead of `.../s/sso_login/Auth0Auth`
+When updating the plugin, please make sure to change the callback URL from `../s/sso_login/Auth0Auth` to `../s/sso_login/Auth0` in your Auth0 application settings.
