@@ -12,9 +12,8 @@
 return [
     'name' => 'Auth0',
     'description' => 'Enables Auth0 login for users.',
-    'version' => '1.0.1',
+    'version' => '1.1.0',
     'author' => 'Florian Wessels',
-
     'services' => [
         'events' => [
             'mautic.auth0.user.subscriber' => [
@@ -27,6 +26,29 @@ return [
                 'class' => \MauticPlugin\MauticAuth0Bundle\EventListener\ConfigSubscriber::class,
             ],
         ],
+        'integrations' => [
+            'mautic.integration.auth0' => [
+                'class' => \MauticPlugin\MauticAuth0Bundle\Integration\Auth0Integration::class,
+                'arguments' => [
+                    'event_dispatcher',
+                    'mautic.helper.cache_storage',
+                    'doctrine.orm.entity_manager',
+                    'session',
+                    'request_stack',
+                    'router',
+                    'translator',
+                    'logger',
+                    'mautic.helper.encryption',
+                    'mautic.lead.model.lead',
+                    'mautic.lead.model.company',
+                    'mautic.helper.paths',
+                    'mautic.core.model.notification',
+                    'mautic.lead.model.field',
+                    'mautic.plugin.model.integration_entity',
+                    'mautic.lead.model.dnc',
+                ],
+            ],
+        ],
         'forms' => [
             'mautic.form.type.auth0config' => [
                 'class' => \MauticPlugin\MauticAuth0Bundle\Form\Type\ConfigType::class,
@@ -34,7 +56,6 @@ return [
             ],
         ],
     ],
-
     'parameters' => [
         'auth0_username' => 'email',
         'auth0_email' => 'email',

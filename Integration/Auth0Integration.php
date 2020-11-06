@@ -2,21 +2,15 @@
 
 namespace MauticPlugin\MauticAuth0Bundle\Integration;
 
-
-use Doctrine\ORM\NonUniqueResultException;
 use GuzzleHttp\Client;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\PluginBundle\Integration\AbstractSsoServiceIntegration;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Security\Provider\UserProvider;
 
-/**
- * Class Auth0AuthIntegration
- *
- * @package MauticPlugin\MauticAuth0Bundle\Integration
- */
-class Auth0AuthIntegration extends AbstractSsoServiceIntegration
+class Auth0Integration extends AbstractSsoServiceIntegration
 {
+
     /**
      * @var Client
      */
@@ -37,23 +31,14 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
      */
     protected $userProvider;
 
-    /**
-     * @return string
-     */
     public function getName()
-    {
-        return 'Auth0Auth';
-    }
-
-    /**
-     * @return string
-     */
-    public function getDisplayName()
     {
         return 'Auth0';
     }
 
     /**
+     * Return's authentication method such as oauth2, oauth1a, key, etc.
+     *
      * @return string
      */
     public function getAuthenticationType()
@@ -109,6 +94,23 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
         $this->userProvider = $userProvider;
     }
 
+
+    /**
+     * Set the callback URL to sso_login.
+     */
+    public function getAuthCallbackUrl()
+    {
+        return sprintf(
+            "%s://%s%s",
+            $this->router->getContext()->getScheme(),
+            $this->router->getContext()->getHost(),
+            $this->router->generate('mautic_sso_login_check',
+                ['integration' => $this->getName()],
+                true //absolute
+            )
+        );
+    }
+
     /**
      * @param array $response
      *
@@ -135,7 +137,6 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
 
         return false;
     }
-
     /**
      * @param $data
      * @param $keys
@@ -182,6 +183,8 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
 
         return \GuzzleHttp\json_decode($response, true);
     }
+
+
 
     /**
      * @return mixed
@@ -285,7 +288,7 @@ class Auth0AuthIntegration extends AbstractSsoServiceIntegration
     {
         $value = $this->getAuth0ValueRecursive(
             $this->auth0User,
-            explode('.', $this->coreParametersHelper->getParameter($configurationParameter))
+            explode('.', $this->coreParametersHelper->get($configurationParameter))
         );
 
         // Fallback if there is no username
