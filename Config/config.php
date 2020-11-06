@@ -10,14 +10,14 @@
  */
 
 return [
-    'name' => 'Auth0',
+    'name'        => 'Auth0',
     'description' => 'Enables Auth0 login for users.',
-    'version' => '1.1.0',
-    'author' => 'Florian Wessels',
-    'services' => [
+    'version'     => '1.1.0',
+    'author'      => 'Florian Wessels',
+    'services'    => [
         'events' => [
             'mautic.auth0.user.subscriber' => [
-                'class' => \MauticPlugin\MauticAuth0Bundle\EventListener\UserSubscriber::class,
+                'class'     => \MauticPlugin\MauticAuth0Bundle\EventListener\UserSubscriber::class,
                 'arguments' => [
                     'mautic.helper.core_parameters',
                 ],
@@ -28,7 +28,7 @@ return [
         ],
         'integrations' => [
             'mautic.integration.auth0' => [
-                'class' => \MauticPlugin\MauticAuth0Bundle\Integration\Auth0Integration::class,
+                'class'     => \MauticPlugin\MauticAuth0Bundle\Integration\Auth0Integration::class,
                 'arguments' => [
                     'event_dispatcher',
                     'mautic.helper.cache_storage',
@@ -57,20 +57,20 @@ return [
         ],
     ],
     'parameters' => [
-        'auth0_username' => 'email',
-        'auth0_email' => 'email',
+        'auth0_username'  => 'email',
+        'auth0_email'     => 'email',
         'auth0_firstName' => 'given_name',
-        'auth0_lastName' => 'family_name',
-        'auth0_timezone' => null,
-        'auth0_locale' => null,
+        'auth0_lastName'  => 'family_name',
+        'auth0_timezone'  => null,
+        'auth0_locale'    => null,
         'auth0_signature' => null,
-        'auth0_position' => null,
-        'auth0_role' => 'app_metadata.roles',
-        'auth0_admin' => 'user_metadata.admin',
-        'multiple_roles' => 1,
-        'rolemapping' => array(
+        'auth0_position'  => null,
+        'auth0_role'      => 'app_metadata.roles',
+        'auth0_admin'     => 'user_metadata.admin',
+        'multiple_roles'  => 1,
+        'rolemapping'     => [
             '0' => 'admin => 1',
-            '1' => 'users => 2'
-        ),
+            '1' => 'users => 2',
+        ],
     ],
 ];

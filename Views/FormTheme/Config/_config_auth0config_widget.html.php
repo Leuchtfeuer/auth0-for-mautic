@@ -16,7 +16,7 @@
     </div>
     <div class="panel-body">
         <div class="alert alert-info">
-            <?php echo $view['translator']->trans('plugin.auth0.config.form.auth0.hint') ?>
+            <?php echo $view['translator']->trans('plugin.auth0.config.form.auth0.hint'); ?>
         </div>
         <div class="row">
             <div class="col-md-6">

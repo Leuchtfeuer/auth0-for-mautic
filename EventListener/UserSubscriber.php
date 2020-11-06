@@ -2,7 +2,6 @@
 
 namespace MauticPlugin\MauticAuth0Bundle\EventListener;
 
-
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Event\AuthenticationEvent;
@@ -12,11 +11,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 
-/**
- * Class UserSubscriber
- *
- * @package MauticPlugin\MauticAuth0Bundle\EventListener
- */
 class UserSubscriber implements EventSubscriberInterface
 {
     /**
@@ -24,11 +18,6 @@ class UserSubscriber implements EventSubscriberInterface
      */
     protected $coreParametersHelper;
 
-    /**
-     * UserSubscriber constructor.
-     *
-     * @param CoreParametersHelper $coreParametersHelper
-     */
     public function __construct(CoreParametersHelper $coreParametersHelper)
     {
         $this->coreParametersHelper = $coreParametersHelper;
@@ -40,19 +29,16 @@ class UserSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            UserEvents::USER_PRE_AUTHENTICATION => ['onUserAuthentication', 0,],
+            UserEvents::USER_PRE_AUTHENTICATION => ['onUserAuthentication', 0],
         ];
     }
 
-    /**
-     * @param AuthenticationEvent $event
-     */
     public function onUserAuthentication(AuthenticationEvent $event)
     {
-        $result = false;
+        $result                = false;
         $authenticatingService = $event->getAuthenticatingService();
 
-        if ($authenticatingService === 'Auth0') {
+        if ('Auth0' === $authenticatingService) {
             $integration = $event->getIntegration($authenticatingService);
 
             if ($integration instanceof Auth0Integration) {
@@ -70,8 +56,7 @@ class UserSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @param Auth0Integration $integration
-     * @param                               $loginCheck
+     * @param $loginCheck
      *
      * @return bool|RedirectResponse
      */
@@ -81,8 +66,7 @@ class UserSubscriber implements EventSubscriberInterface
             if ($authenticatedUser = $integration->ssoAuthCallback()) {
                 return $authenticatedUser;
             }
-        }
-        else {
+        } else {
             $loginUrl = $integration->getAuthLoginUrl();
             $response = new RedirectResponse($loginUrl);
 

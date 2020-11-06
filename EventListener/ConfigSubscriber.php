@@ -2,17 +2,11 @@
 
 namespace MauticPlugin\MauticAuth0Bundle\EventListener;
 
-
 use Mautic\ConfigBundle\ConfigEvents;
 use Mautic\ConfigBundle\Event\ConfigBuilderEvent;
 use MauticPlugin\MauticAuth0Bundle\Form\Type\ConfigType;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-/**
- * Class ConfigSubscriber
- *
- * @package MauticPlugin\MauticAuth0Bundle\EventListener
- */
 class ConfigSubscriber implements EventSubscriberInterface
 {
     /**
@@ -31,7 +25,7 @@ class ConfigSubscriber implements EventSubscriberInterface
             'bundle'     => 'MauticAuth0Bundle',
             'formAlias'  => 'auth0config',
             'formTheme'  => 'MauticAuth0Bundle:FormTheme\Config',
-            'formType'  => ConfigType::class,
+            'formType'   => ConfigType::class,
             'parameters' => $event->getParametersFromConfig('MauticAuth0Bundle'),
         ]);
     }
