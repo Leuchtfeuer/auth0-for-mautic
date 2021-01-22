@@ -4,6 +4,7 @@ Auth0 for Mautic
 
 
 [![Latest Stable Version](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/v/stable)](https://packagist.org/packages/leuchtfeuer/mautic-auth0-bundle)
+[![Build Status](https://github.com/Leuchtfeuer/mautic-auth0-bundle/workflows/Continous%20Integration/badge.svg)](https://github.com/Leuchtfeuer/mautic-auth0-bundle/actions)
 [![Total Downloads](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/downloads)](https://packagist.org/leuchtfeuer/mautic-auth0-bundle)
 [![Latest Unstable Version](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/v/unstable)](https://packagist.org/leuchtfeuer/mautic-auth0-bundle)
 [![Code Climate](https://codeclimate.com/github/Leuchtfeuer/auth0-for-mautic/badges/gpa.svg)](https://codeclimate.com/github/Leuchtfeuer/auth0-for-mautic)
