@@ -22,7 +22,7 @@ This Mautic plugin allows logins and sign ups via Auth0.
 
 There is also the possibility to add this package directly into your project composer.json file by executing following command: `composer require leuchtfeuer/mautic-auth0-bundle`.
 
-We are currently supporting following Mautic versions:<br>br>
+We are currently supporting following Mautic versions:<br><br>
 
 | Bundle Version | Mautic v3 Support | Mautic v2 Support |
 | :-: | :-: | :-: |
