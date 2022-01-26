@@ -1,6 +1,6 @@
 Auth0 for Mautic
 ================
-![Auth0Mautic](https://www.bitmotion.de/fileadmin/github/auth0-for-mautic/Mautic-Auth0.png "Auth0 for Mautic")
+![Auth0Mautic](https://www.leuchtfeuer.com/fileadmin/github/auth0-for-mautic/Mautic-Auth0.png "Auth0 for Mautic")
 
 
 [![Latest Stable Version](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/v/stable)](https://packagist.org/packages/leuchtfeuer/mautic-auth0-bundle)
