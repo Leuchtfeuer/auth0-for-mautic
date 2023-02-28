@@ -1,5 +1,5 @@
-Auth0 for Mautic
-================
+Leuchtfeuer Auth0 for Mautic
+============================
 ![Auth0Mautic](https://www.leuchtfeuer.com/fileadmin/github/auth0-for-mautic/Mautic-Auth0.png "Auth0 for Mautic")
 
 
@@ -122,3 +122,8 @@ If you want to map a role from Auth0 to your Mautic-User you have to alter your 
 
 ## Update from Mautic 2.x.x to Mautic 3.x.x
 When updating the plugin, please make sure to change the callback URL from `../s/sso_login/Auth0Auth` to `../s/sso_login/Auth0` in your Auth0 application settings.
+
+### Author
+Leuchtfeuer Digital Marketing GmbH
+
+mautic@Leuchtfeuer.com
