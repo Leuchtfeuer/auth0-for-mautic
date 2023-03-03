@@ -1,5 +1,4 @@
-Leuchtfeuer Auth0 for Mautic
-============================
+# Auth0 Integration by Leuchtfeuer
 ![Auth0Mautic](https://www.leuchtfeuer.com/fileadmin/github/auth0-for-mautic/Mautic-Auth0.png "Auth0 for Mautic")
 
 

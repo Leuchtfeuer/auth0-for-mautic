@@ -10,9 +10,9 @@
  */
 
 return [
-    'name'        => 'Leuchtfeuer Auth0 for Mautic',
+    'name'        => 'Auth0 Integration by Leuchtfeuer',
     'description' => 'Enables Auth0 login for users.',
-    'version'     => '1.1.0',
+    'version'     => '1.1.1',
     'author'      => 'Leuchtfeuer Digital Marketing GmbH',
     'services'    => [
         'events' => [
