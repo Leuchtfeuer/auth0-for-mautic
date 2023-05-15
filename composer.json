@@ -37,5 +37,9 @@
   },
   "replace": {
     "bitmotion/mautic-auth0-bundle": "self.version"
+  },
+  "require": {
+    "guzzlehttp/guzzle": "^6.2|^7.2",
+    "symfony/security": "^2.8|^3.4|^4.4"
   }
 }

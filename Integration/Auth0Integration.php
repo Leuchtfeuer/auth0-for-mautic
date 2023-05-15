@@ -7,6 +7,7 @@ use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\PluginBundle\Integration\AbstractSsoServiceIntegration;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Security\Provider\UserProvider;
+use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 
 class Auth0Integration extends AbstractSsoServiceIntegration
 {
@@ -117,6 +118,11 @@ class Auth0Integration extends AbstractSsoServiceIntegration
         try {
             $userInfo        = $this->getUserInfo($response);
             $managementToken = $this->getManagementToken();
+
+            if (!array_key_exists('token_type', $managementToken) || !array_key_exists('access_token', $managementToken)) {
+                throw new AuthenticationServiceException('Management token');
+            }
+
             $auth0User       = $this->getAuth0User($userInfo['sub'], $managementToken);
         } catch (\GuzzleHttp\Exception\GuzzleException $exception) {
             return false;
@@ -291,7 +297,7 @@ class Auth0Integration extends AbstractSsoServiceIntegration
 
         // Fallback if there is no username
         if ('' === $value && '' !== $fallback) {
-            $value = $this->auth0User[$fallback];
+            $value = isset($this->auth0User[$fallback]) ? $this->auth0User[$fallback] : '';
         }
 
         return $value;
