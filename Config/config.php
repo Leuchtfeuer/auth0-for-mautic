@@ -12,23 +12,23 @@
 return [
     'name'        => 'Auth0 Integration by Leuchtfeuer',
     'description' => 'Enables Auth0 login for users.',
-    'version'     => '1.1.1',
+    'version'     => '2.0.0',
     'author'      => 'Leuchtfeuer Digital Marketing GmbH',
     'services'    => [
         'events' => [
-            'mautic.auth0.user.subscriber' => [
-                'class'     => \MauticPlugin\MauticAuth0Bundle\EventListener\UserSubscriber::class,
+            'mautic.leuchtfeuerauth0.user.subscriber' => [
+                'class'     => \MauticPlugin\LeuchtfeuerAuth0Bundle\EventListener\UserSubscriber::class,
                 'arguments' => [
                     'mautic.helper.core_parameters',
                 ],
             ],
-            'mautic.auth0.config.subscriber' => [
-                'class' => \MauticPlugin\MauticAuth0Bundle\EventListener\ConfigSubscriber::class,
+            'mautic.leuchtfeuerauth0.config.subscriber' => [
+                'class' => \MauticPlugin\LeuchtfeuerAuth0Bundle\EventListener\ConfigSubscriber::class,
             ],
         ],
         'integrations' => [
-            'mautic.integration.auth0' => [
-                'class'     => \MauticPlugin\MauticAuth0Bundle\Integration\Auth0Integration::class,
+            'mautic.integration.leuchtfeuerauth0' => [
+                'class'     => \MauticPlugin\LeuchtfeuerAuth0Bundle\Integration\LeuchtfeuerAuth0Integration::class,
                 'arguments' => [
                     'event_dispatcher',
                     'mautic.helper.cache_storage',
@@ -50,23 +50,23 @@ return [
             ],
         ],
         'forms' => [
-            'mautic.form.type.auth0config' => [
-                'class' => \MauticPlugin\MauticAuth0Bundle\Form\Type\ConfigType::class,
-                'alias' => 'auth0config',
+            'mautic.form.type.leuchtfeuerauth0config' => [
+                'class' => \MauticPlugin\LeuchtfeuerAuth0Bundle\Form\Type\ConfigType::class,
+                'alias' => 'leuchtfeuerauth0config',
             ],
         ],
     ],
     'parameters' => [
-        'auth0_username'  => 'email',
-        'auth0_email'     => 'email',
-        'auth0_firstName' => 'given_name',
-        'auth0_lastName'  => 'family_name',
-        'auth0_timezone'  => null,
-        'auth0_locale'    => null,
-        'auth0_signature' => null,
-        'auth0_position'  => null,
-        'auth0_role'      => 'app_metadata.roles',
-        'auth0_admin'     => 'user_metadata.admin',
+        'leuchtfeuerauth0_username'  => 'email',
+        'leuchtfeuerauth0_email'     => 'email',
+        'leuchtfeuerauth0_firstName' => 'given_name',
+        'leuchtfeuerauth0_lastName'  => 'family_name',
+        'leuchtfeuerauth0_timezone'  => null,
+        'leuchtfeuerauth0_locale'    => null,
+        'leuchtfeuerauth0_signature' => null,
+        'leuchtfeuerauth0_position'  => null,
+        'leuchtfeuerauth0_role'      => 'app_metadata.roles',
+        'leuchtfeuerauth0_admin'     => 'user_metadata.admin',
         'multiple_roles'  => 1,
         'rolemapping'     => [
             '0' => 'admin => 1',

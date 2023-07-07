@@ -1,10 +1,10 @@
 <?php
 
-namespace MauticPlugin\MauticAuth0Bundle\EventListener;
+namespace MauticPlugin\LeuchtfeuerAuth0Bundle\EventListener;
 
 use Mautic\ConfigBundle\ConfigEvents;
 use Mautic\ConfigBundle\Event\ConfigBuilderEvent;
-use MauticPlugin\MauticAuth0Bundle\Form\Type\ConfigType;
+use MauticPlugin\LeuchtfeuerAuth0Bundle\Form\Type\ConfigType;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class ConfigSubscriber implements EventSubscriberInterface
@@ -22,11 +22,11 @@ class ConfigSubscriber implements EventSubscriberInterface
     public function onConfigGenerate(ConfigBuilderEvent $event)
     {
         $event->addForm([
-            'bundle'     => 'MauticAuth0Bundle',
-            'formAlias'  => 'auth0config',
-            'formTheme'  => 'MauticAuth0Bundle:FormTheme\Config',
+            'bundle'     => 'LeuchtfeuerAuth0Bundle',
+            'formAlias'  => 'leuchtfeuerauth0config',
+            'formTheme'  => 'LeuchtfeuerAuth0Bundle:FormTheme\Config',
             'formType'   => ConfigType::class,
-            'parameters' => $event->getParametersFromConfig('MauticAuth0Bundle'),
+            'parameters' => $event->getParametersFromConfig('LeuchtfeuerAuth0Bundle'),
         ]);
     }
 }

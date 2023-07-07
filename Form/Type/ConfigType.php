@@ -1,6 +1,6 @@
 <?php
 
-namespace MauticPlugin\MauticAuth0Bundle\Form\Type;
+namespace MauticPlugin\LeuchtfeuerAuth0Bundle\Form\Type;
 
 use Mautic\CoreBundle\Form\DataTransformer\ArrayLinebreakTransformer;
 use Mautic\CoreBundle\Form\Type\YesNoButtonGroupType;
@@ -14,7 +14,7 @@ class ConfigType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder->add(
-            'auth0_username',
+            'leuchtfeuerauth0_username',
             TextType::class,
             [
                 'label'      => 'mautic.core.username',
@@ -28,7 +28,7 @@ class ConfigType extends AbstractType
         );
 
         $builder->add(
-            'auth0_firstName',
+            'leuchtfeuerauth0_firstName',
             TextType::class,
             [
                 'label'      => 'mautic.core.firstname',
@@ -43,7 +43,7 @@ class ConfigType extends AbstractType
         );
 
         $builder->add(
-            'auth0_lastName',
+            'leuchtfeuerauth0_lastName',
             TextType::class,
             [
                 'label'      => 'mautic.core.lastname',
@@ -58,7 +58,7 @@ class ConfigType extends AbstractType
         );
 
         $builder->add(
-            'auth0_position',
+            'leuchtfeuerauth0_position',
             TextType::class,
             [
                 'label'      => 'mautic.core.position',
@@ -73,7 +73,7 @@ class ConfigType extends AbstractType
         );
 
         $builder->add(
-            'auth0_signature',
+            'leuchtfeuerauth0_signature',
             TextType::class,
             [
                 'label'      => 'mautic.email.token.signature',
@@ -88,7 +88,7 @@ class ConfigType extends AbstractType
         );
 
         $builder->add(
-            'auth0_email',
+            'leuchtfeuerauth0_email',
             TextType::class,
             [
                 'label'      => 'mautic.core.type.email',
@@ -102,7 +102,7 @@ class ConfigType extends AbstractType
         );
 
         $builder->add(
-            'auth0_timezone',
+            'leuchtfeuerauth0_timezone',
             TextType::class,
             [
                 'label'      => 'mautic.core.timezone',
@@ -117,7 +117,7 @@ class ConfigType extends AbstractType
         );
 
         $builder->add(
-            'auth0_locale',
+            'leuchtfeuerauth0_locale',
             TextType::class,
             [
                 'label'      => 'mautic.core.language',
@@ -132,10 +132,10 @@ class ConfigType extends AbstractType
         );
 
         $builder->add(
-            'auth0_role',
+            'leuchtfeuerauth0_role',
             TextType::class,
             [
-                'label'      => 'plugin.auth0.integration.type_label.role_path',
+                'label'      => 'plugin.leuchtfeuerauth0.integration.type_label.role_path',
                 'label_attr' => [
                     'class' => 'control-label',
                 ],
@@ -150,7 +150,7 @@ class ConfigType extends AbstractType
             'multiple_roles',
             YesNoButtonGroupType::class,
             [
-                'label'      => 'plugin.auth0.integration.type_label.multiple_roles',
+                'label'      => 'plugin.leuchtfeuerauth0.integration.type_label.multiple_roles',
                 'label_attr' => [
                     'class' => 'control-label',
                 ],
@@ -167,15 +167,15 @@ class ConfigType extends AbstractType
                 'rolemapping',
                 TextareaType::class,
                 [
-                    'label'      => 'plugin.auth0.integration.type_label.rolemapping',
+                    'label'      => 'plugin.leuchtfeuerauth0.integration.type_label.rolemapping',
                     'label_attr' => [
                         'class' => 'control-label',
                     ],
                     'attr' => [
                         'class'        => 'form-control',
-                        'tooltip'      => 'plugin.auth0.integration.type_label.rolemapping.tooltip',
+                        'tooltip'      => 'plugin.leuchtfeuerauth0.integration.type_label.rolemapping.tooltip',
                         'rows'         => 4,
-                        'data-show-on' => '{"config_auth0config_multiple_roles_1":"checked"}',
+                        'data-show-on' => '{"config_leuchtfeuerauth0config_multiple_roles_1":"checked"}',
                     ],
                     'required' => false,
                 ]
@@ -188,6 +188,6 @@ class ConfigType extends AbstractType
      */
     public function getName()
     {
-        return 'auth0config';
+        return 'leuchtfeuerauth0config';
     }
 }

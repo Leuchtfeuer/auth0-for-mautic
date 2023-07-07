@@ -1,6 +1,6 @@
 <?php
 
-namespace MauticPlugin\MauticAuth0Bundle\Integration;
+namespace MauticPlugin\LeuchtfeuerAuth0Bundle\Integration;
 
 use GuzzleHttp\Client;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
@@ -9,7 +9,7 @@ use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Security\Provider\UserProvider;
 use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 
-class Auth0Integration extends AbstractSsoServiceIntegration
+class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 {
     /**
      * @var Client
@@ -19,7 +19,7 @@ class Auth0Integration extends AbstractSsoServiceIntegration
     /**
      * @var array
      */
-    protected $auth0User = [];
+    protected $leuchtfeuerauth0User = [];
 
     /**
      * @var CoreParametersHelper
@@ -31,9 +31,17 @@ class Auth0Integration extends AbstractSsoServiceIntegration
      */
     protected $userProvider;
 
+    public const PLUGIN_NAME = 'LeuchtfeuerAuth0';
+    public const DISPLAY_NAME = 'Auth0';
+
     public function getName()
     {
-        return 'Auth0';
+        return self::PLUGIN_NAME;
+    }
+
+    public function getDisplayName()
+    {
+        return self::DISPLAY_NAME;
     }
 
     /**
@@ -123,14 +131,14 @@ class Auth0Integration extends AbstractSsoServiceIntegration
                 throw new AuthenticationServiceException('Management token');
             }
 
-            $auth0User       = $this->getAuth0User($userInfo['sub'], $managementToken);
+            $leuchtfeuerauth0User       = $this->getAuth0User($userInfo['sub'], $managementToken);
         } catch (\GuzzleHttp\Exception\GuzzleException $exception) {
             return false;
         }
 
-        if (is_array($auth0User) && isset($auth0User['user_id']) && $auth0User['user_id'] === $userInfo['sub']) {
+        if (is_array($leuchtfeuerauth0User) && isset($leuchtfeuerauth0User['user_id']) && $leuchtfeuerauth0User['user_id'] === $userInfo['sub']) {
             // There is a user
-            $this->auth0User = $auth0User;
+            $this->leuchtfeuerauth0User = $leuchtfeuerauth0User;
 
             return $this->createMauticUserFromAuth0User();
         }
@@ -246,7 +254,7 @@ class Auth0Integration extends AbstractSsoServiceIntegration
 
         // Find existing user
         try {
-            $mauticUser = $this->userProvider->loadUserByUsername($this->setValueFromAuth0User('auth0_username', 'email'));
+            $mauticUser = $this->userProvider->loadUserByUsername($this->setValueFromAuth0User('leuchtfeuerauth0_username', 'email'));
         } catch (\Exception $exception) {
             // No User found. Do nothing.
         }
@@ -256,24 +264,24 @@ class Auth0Integration extends AbstractSsoServiceIntegration
             $mauticUser = new User();
         }
 
-        // Override user data by data provided by auth0
+        // Override user data by data provided by leuchtfeuerauth0
         $mauticUser
-            ->setUsername($this->setValueFromAuth0User('auth0_username', 'email'))
-            ->setEmail($this->setValueFromAuth0User('auth0_email', 'email'))
-            ->setFirstName($this->setValueFromAuth0User('auth0_firstName', 'given_name'))
-            ->setLastName($this->setValueFromAuth0User('auth0_lastName', 'family_name'))
-            ->setTimezone($this->setValueFromAuth0User('auth0_timezone'))
-            ->setLocale($this->setValueFromAuth0User('auth0_locale'))
-            ->setSignature($this->setValueFromAuth0User('auth0_signature'))
-            ->setPosition($this->setValueFromAuth0User('auth0_position'))
+            ->setUsername($this->setValueFromAuth0User('leuchtfeuerauth0_username', 'email'))
+            ->setEmail($this->setValueFromAuth0User('leuchtfeuerauth0_email', 'email'))
+            ->setFirstName($this->setValueFromAuth0User('leuchtfeuerauth0_firstName', 'given_name'))
+            ->setLastName($this->setValueFromAuth0User('leuchtfeuerauth0_lastName', 'family_name'))
+            ->setTimezone($this->setValueFromAuth0User('leuchtfeuerauth0_timezone'))
+            ->setLocale($this->setValueFromAuth0User('leuchtfeuerauth0_locale'))
+            ->setSignature($this->setValueFromAuth0User('leuchtfeuerauth0_signature'))
+            ->setPosition($this->setValueFromAuth0User('leuchtfeuerauth0_position'))
             ->setRole(
                 $this->getUserRole()
             );
 
-        $auth0Role = $this->setValueFromAuth0User('auth0_role');
-        if ($auth0Role) {
+        $leuchtfeuerauth0Role = $this->setValueFromAuth0User('leuchtfeuerauth0_role');
+        if ($leuchtfeuerauth0Role) {
             $roleRepository = $this->em->getRepository('MauticUserBundle:Role');
-            $mauticRole     = $roleRepository->findOneBy(['id' => $auth0Role]);
+            $mauticRole     = $roleRepository->findOneBy(['id' => $leuchtfeuerauth0Role]);
             if ($mauticRole) {
                 $mauticUser->setRole($mauticRole);
             }
@@ -291,13 +299,13 @@ class Auth0Integration extends AbstractSsoServiceIntegration
     protected function setValueFromAuth0User($configurationParameter, $fallback = '')
     {
         $value = $this->getAuth0ValueRecursive(
-            $this->auth0User,
+            $this->leuchtfeuerauth0User,
             explode('.', $this->coreParametersHelper->get($configurationParameter))
         );
 
         // Fallback if there is no username
         if ('' === $value && '' !== $fallback) {
-            $value = isset($this->auth0User[$fallback]) ? $this->auth0User[$fallback] : '';
+            $value = isset($this->leuchtfeuerauth0User[$fallback]) ? $this->leuchtfeuerauth0User[$fallback] : '';
         }
 
         return $value;
@@ -309,10 +317,10 @@ class Auth0Integration extends AbstractSsoServiceIntegration
     public function getRequiredKeyFields()
     {
         return [
-            'domain'        => 'plugin.auth0.integration.keyfield.domain',
-            'audience'      => 'plugin.auth0.integration.keyfield.audience',
-            'client_id'     => 'plugin.auth0.integration.keyfield.client_id',
-            'client_secret' => 'plugin.auth0.integration.keyfield.client_secret',
+            'domain'        => 'plugin.leuchtfeuerauth0.integration.keyfield.domain',
+            'audience'      => 'plugin.leuchtfeuerauth0.integration.keyfield.audience',
+            'client_id'     => 'plugin.leuchtfeuerauth0.integration.keyfield.client_id',
+            'client_secret' => 'plugin.leuchtfeuerauth0.integration.keyfield.client_secret',
         ];
     }
 }

@@ -12,31 +12,24 @@
   "license": "GPL-3.0-or-later",
   "homepage": "https://www.Leuchtfeuer.com",
   "authors": [
-    {
-      "name": "Florian Wessels",
-      "email": "f.wessels@Leuchtfeuer.com",
-      "homepage": "https://www.Leuchtfeuer.com",
-      "role": "Developer"
-    },
-    {
-      "name": "Lukas Günther",
-      "email": "l.guenther@Leuchtfeuer.com",
-      "homepage": "https://www.Leuchtfeuer.com",
-      "role": "Developer"
-    }
+	  {
+		  "name": "Leuchtfeuer Digital Marketing GmbH",
+		  "email": "mautic-plugins@Leuchtfeuer.com",
+		  "homepage": "https://www.Leuchtfeuer.com"
+	  }
   ],
   "support": {
     "issues": "https://github.com/Leuchtfeuer/auth0-for-mautic/issues",
     "source": "https://github.com/Leuchtfeuer/auth0-for-mautic",
-    "email": "dev@Leuchtfeuer.com"
+    "email": "mautic-plugins@Leuchtfeuer.com"
   },
   "autoload": {
     "psr-4": {
-      "MauticPlugin\\MauticAuth0Bundle\\": ""
+      "MauticPlugin\\LeuchtfeuerAuth0Bundle\\": ""
     }
   },
   "replace": {
-    "bitmotion/mautic-auth0-bundle": "self.version"
+    "bitmotion/mautic-leuchtfeuerauth0-bundle": "self.version"
   },
   "require": {
     "guzzlehttp/guzzle": "^6.2|^7.2",

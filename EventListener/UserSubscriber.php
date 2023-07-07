@@ -1,12 +1,12 @@
 <?php
 
-namespace MauticPlugin\MauticAuth0Bundle\EventListener;
+namespace MauticPlugin\LeuchtfeuerAuth0Bundle\EventListener;
 
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Event\AuthenticationEvent;
 use Mautic\UserBundle\UserEvents;
-use MauticPlugin\MauticAuth0Bundle\Integration\Auth0Integration;
+use MauticPlugin\LeuchtfeuerAuth0Bundle\Integration\LeuchtfeuerAuth0Integration;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -41,7 +41,7 @@ class UserSubscriber implements EventSubscriberInterface
         if ('Auth0' === $authenticatingService) {
             $integration = $event->getIntegration($authenticatingService);
 
-            if ($integration instanceof Auth0Integration) {
+            if ($integration instanceof LeuchtfeuerAuth0Integration) {
                 $integration->setCoreParametersHelper($this->coreParametersHelper);
                 $integration->setUserProvider($event->getUserProvider());
                 $result = $this->authenticateService($integration, $event->isLoginCheck());
@@ -60,7 +60,7 @@ class UserSubscriber implements EventSubscriberInterface
      *
      * @return bool|RedirectResponse
      */
-    private function authenticateService(Auth0Integration $integration, $loginCheck)
+    private function authenticateService(LeuchtfeuerAuth0Integration $integration, $loginCheck)
     {
         if ($loginCheck) {
             if ($authenticatedUser = $integration->ssoAuthCallback()) {
