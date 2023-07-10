@@ -1,13 +1,13 @@
 # Auth0 Integration by Leuchtfeuer
-![Auth0Mautic](https://www.leuchtfeuer.com/fileadmin/github/leuchtfeuerauth0-for-mautic/Mautic-Auth0.png "Auth0 for Mautic")
+![Auth0Mautic](https://www.leuchtfeuer.com/fileadmin/github/auth0-for-mautic/Mautic-Auth0.png "Auth0 for Mautic")
 
 
-[![Latest Stable Version](https://poser.pugx.org/leuchtfeuer/mautic-leuchtfeuerauth0-bundle/v/stable)](https://packagist.org/packages/leuchtfeuer/mautic-leuchtfeuerauth0-bundle)
-[![Build Status](https://github.com/Leuchtfeuer/leuchtfeuerauth0-for-mautic/workflows/Continous%20Integration/badge.svg)](https://github.com/Leuchtfeuer/leuchtfeuerauth0-for-mautic/actions)
-[![Total Downloads](https://poser.pugx.org/leuchtfeuer/mautic-leuchtfeuerauth0-bundle/downloads)](https://packagist.org/leuchtfeuer/mautic-leuchtfeuerauth0-bundle)
-[![Latest Unstable Version](https://poser.pugx.org/leuchtfeuer/mautic-leuchtfeuerauth0-bundle/v/unstable)](https://packagist.org/leuchtfeuer/mautic-leuchtfeuerauth0-bundle)
-[![Code Climate](https://codeclimate.com/github/Leuchtfeuer/leuchtfeuerauth0-for-mautic/badges/gpa.svg)](https://codeclimate.com/github/Leuchtfeuer/leuchtfeuerauth0-for-mautic)
-[![License](https://poser.pugx.org/leuchtfeuer/mautic-leuchtfeuerauth0-bundle/license)](https://packagist.org/packages/leuchtfeuer/mautic-leuchtfeuerauth0-bundle)
+[![Latest Stable Version](https://poser.pugx.org/leuchtfeuer/mautic-leuchtfeuerauth0-bundle/v/stable)](https://packagist.org/packages/leuchtfeuer/mautic-auth0-bundle)
+[![Build Status](https://github.com/Leuchtfeuer/auth0-for-mautic/workflows/Continous%20Integration/badge.svg)](https://github.com/Leuchtfeuer/auth0-for-mautic/actions)
+[![Total Downloads](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/downloads)](https://packagist.org/leuchtfeuer/mautic-auth0-bundle)
+[![Latest Unstable Version](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/v/unstable)](https://packagist.org/leuchtfeuer/mautic-auth0-bundle)
+[![Code Climate](https://codeclimate.com/github/Leuchtfeuer/auth0-for-mautic/badges/gpa.svg)](https://codeclimate.com/github/Leuchtfeuer/auth0-for-mautic)
+[![License](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/license)](https://packagist.org/packages/leuchtfeuer/mautic-auth0-bundle)
 
 This Mautic plugin allows logins and sign ups via Auth0.
 
@@ -62,42 +62,42 @@ You can configure the mapping (Auth0 data -> Mautic User data) in the configurat
         <th>Default (Auth0) Value</th>
     </tr>
     <tr>
-        <td>leuchtfeuerauth0_username</td>
+        <td>auth0_username</td>
         <td>Username</td>
         <td>email</td>
     </tr>
     <tr>
-        <td>leuchtfeuerauth0_email</td>
+        <td>auth0_email</td>
         <td>Email</td>
         <td>email</td>
     </tr>
     <tr>
-        <td>leuchtfeuerauth0_firstName</td>
+        <td>auth0_firstName</td>
         <td>First Name</td>
         <td>given_name</td>
     </tr>
     <tr>
-        <td>leuchtfeuerauth0_lastName</td>
+        <td>auth0_lastName</td>
         <td>Last Name</td>
         <td>family_name</td>
     </tr>
     <tr>
-        <td>leuchtfeuerauth0_signature</td>
-        <td>Signature</td>
-        <td></td>
-    </tr>
-    <tr>
-        <td>leuchtfeuerauth0_position</td>
+        <td>auth0_position</td>
         <td>Position</td>
         <td></td>
     </tr>
     <tr>
-        <td>leuchtfeuerauth0_timezone</td>
+        <td>auth0_signature</td>
+        <td>Signature</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>auth0_timezone</td>
         <td>Timezone</td>
         <td></td>
     </tr>
     <tr>
-        <td>leuchtfeuerauth0_locale</td>
+        <td>auth0_locale</td>
         <td>Language</td>
         <td></td>
     </tr>
@@ -119,10 +119,7 @@ If you want to map a role from Auth0 to your Mautic-User you have to alter your 
 }
 ```
 
-## Update from Mautic 2.x.x to Mautic 3.x.x
-When updating the plugin, please make sure to change the callback URL from `../s/sso_login/Auth0Auth` to `../s/sso_login/Auth0` in your Auth0 application settings.
-
 ### Author
 Leuchtfeuer Digital Marketing GmbH
 
-mautic@Leuchtfeuer.com
+mautic-plugins@Leuchtfeuer.com
