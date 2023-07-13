@@ -2,7 +2,7 @@
 ![Auth0Mautic](https://www.leuchtfeuer.com/fileadmin/github/auth0-for-mautic/Mautic-Auth0.png "Auth0 for Mautic")
 
 
-[![Latest Stable Version](https://poser.pugx.org/leuchtfeuer/mautic-leuchtfeuerauth0-bundle/v/stable)](https://packagist.org/packages/leuchtfeuer/mautic-auth0-bundle)
+[![Latest Stable Version](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/v/stable)](https://packagist.org/packages/leuchtfeuer/mautic-auth0-bundle)
 [![Build Status](https://github.com/Leuchtfeuer/auth0-for-mautic/workflows/Continous%20Integration/badge.svg)](https://github.com/Leuchtfeuer/auth0-for-mautic/actions)
 [![Total Downloads](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/downloads)](https://packagist.org/leuchtfeuer/mautic-auth0-bundle)
 [![Latest Unstable Version](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/v/unstable)](https://packagist.org/leuchtfeuer/mautic-auth0-bundle)
