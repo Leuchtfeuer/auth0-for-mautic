@@ -38,7 +38,7 @@ class UserSubscriber implements EventSubscriberInterface
         $result                = false;
         $authenticatingService = $event->getAuthenticatingService();
 
-        if ('Auth0' === $authenticatingService) {
+        if ('LeuchtfeuerAuth0' === $authenticatingService) {
             $integration = $event->getIntegration($authenticatingService);
 
             if ($integration instanceof LeuchtfeuerAuth0Integration) {

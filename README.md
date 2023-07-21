@@ -119,6 +119,9 @@ If you want to map a role from Auth0 to your Mautic-User you have to alter your 
 }
 ```
 
+### Update from Auth0 version 1.1.1 to >= 2.0.0
+When updating the plugin, please make sure to change the callback URL from `../s/sso_login/Auth0` to `../s/sso_login/LeuchtfeuerAuth0` in your Auth0 application settings.
+
 ### Author
 Leuchtfeuer Digital Marketing GmbH
 
