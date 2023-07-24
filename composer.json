@@ -29,7 +29,7 @@
     }
   },
   "replace": {
-    "leuchtfeuer/mautic-auth0-bundle": "self.version"
+    "bitmotion/mautic-auth0-bundle": "self.version"
   },
   "require": {
     "guzzlehttp/guzzle": "^6.2|^7.2",
