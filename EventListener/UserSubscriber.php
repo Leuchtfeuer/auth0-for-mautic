@@ -1,22 +1,19 @@
 <?php
 
-namespace MauticPlugin\MauticAuth0Bundle\EventListener;
+namespace MauticPlugin\LeuchtfeuerAuth0Bundle\EventListener;
 
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Event\AuthenticationEvent;
 use Mautic\UserBundle\UserEvents;
-use MauticPlugin\MauticAuth0Bundle\Integration\Auth0Integration;
+use MauticPlugin\LeuchtfeuerAuth0Bundle\Integration\LeuchtfeuerAuth0Integration;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 class UserSubscriber implements EventSubscriberInterface
 {
-    /**
-     * @var CoreParametersHelper
-     */
-    protected $coreParametersHelper;
+    protected CoreParametersHelper $coreParametersHelper;
 
     public function __construct(CoreParametersHelper $coreParametersHelper)
     {
@@ -24,24 +21,24 @@ class UserSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @return array
+     * @return array<string, string|array{0: string, 1: int}|list<array{0: string, 1?: int}>>
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             UserEvents::USER_PRE_AUTHENTICATION => ['onUserAuthentication', 0],
         ];
     }
 
-    public function onUserAuthentication(AuthenticationEvent $event)
+    public function onUserAuthentication(AuthenticationEvent $event): void
     {
         $result                = false;
         $authenticatingService = $event->getAuthenticatingService();
 
-        if ('Auth0' === $authenticatingService) {
+        if (LeuchtfeuerAuth0Integration::NAME === $authenticatingService) {
             $integration = $event->getIntegration($authenticatingService);
 
-            if ($integration instanceof Auth0Integration) {
+            if ($integration instanceof LeuchtfeuerAuth0Integration) {
                 $integration->setCoreParametersHelper($this->coreParametersHelper);
                 $integration->setUserProvider($event->getUserProvider());
                 $result = $this->authenticateService($integration, $event->isLoginCheck());
@@ -56,11 +53,9 @@ class UserSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @param $loginCheck
-     *
      * @return bool|RedirectResponse
      */
-    private function authenticateService(Auth0Integration $integration, $loginCheck)
+    private function authenticateService(LeuchtfeuerAuth0Integration $integration, bool $loginCheck)
     {
         if ($loginCheck) {
             if ($authenticatedUser = $integration->ssoAuthCallback()) {

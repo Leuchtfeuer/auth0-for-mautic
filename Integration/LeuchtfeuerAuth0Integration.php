@@ -1,89 +1,82 @@
 <?php
 
-namespace MauticPlugin\MauticAuth0Bundle\Integration;
+namespace MauticPlugin\LeuchtfeuerAuth0Bundle\Integration;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\GuzzleException;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\PluginBundle\Integration\AbstractSsoServiceIntegration;
+use Mautic\UserBundle\Entity\Role;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Security\Provider\UserProvider;
 use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 
-class Auth0Integration extends AbstractSsoServiceIntegration
+class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 {
-    /**
-     * @var Client
-     */
-    protected $client;
+    public const NAME = 'LeuchtfeuerAuth0';
+
+    protected ClientInterface $client;
 
     /**
-     * @var array
+     * @var array<string|int|bool, array<string|int|bool|array<string|int|bool>>>
      */
-    protected $auth0User = [];
+    protected array $auth0User = [];
 
-    /**
-     * @var CoreParametersHelper
-     */
-    protected $coreParametersHelper;
+    protected CoreParametersHelper $coreParametersHelper;
 
-    /**
-     * @var UserProvider
-     */
-    protected $userProvider;
+    protected UserProvider $userProvider;
 
-    public function getName()
+    public function getName(): string
     {
-        return 'Auth0';
+        return self::NAME;
+    }
+
+    public function getIcon(): string
+    {
+        return 'plugins/LeuchtfeuerAuth0Bundle/Assets/img/leuchtfeuer-mautic-auth0.png';
     }
 
     /**
      * Return's authentication method such as oauth2, oauth1a, key, etc.
-     *
-     * @return string
      */
-    public function getAuthenticationType()
+    public function getAuthenticationType(): string
     {
         return 'oauth2';
     }
 
-    /**
-     * @return string
-     */
-    public function getAuthenticationUrl()
+    public function getAuthenticationUrl(): string
     {
         return 'https://'.$this->keys['domain'].'/authorize';
     }
 
-    /**
-     * @return string
-     */
-    public function getAuthScope()
+    public function getAuthScope(): string
     {
         return 'openid profile read:current_user';
     }
 
-    /**
-     * @return string
-     */
-    public function getAccessTokenUrl()
+    public function getAccessTokenUrl(): string
     {
         return 'https://'.$this->keys['domain'].'/oauth/token';
     }
 
-    /**
-     * @return bool
-     */
-    public function shouldAutoCreateNewUser()
+    public function shouldAutoCreateNewUser(): bool
     {
         return true;
     }
 
-    public function setCoreParametersHelper(CoreParametersHelper $coreParametersHelper)
+    /**
+     * Set in the UserSubscriber.
+     */
+    public function setCoreParametersHelper(CoreParametersHelper $coreParametersHelper): void
     {
         $this->coreParametersHelper = $coreParametersHelper;
     }
 
-    public function setUserProvider(UserProvider $userProvider)
+    /**
+     * Set in the UserSubscriber.
+     */
+    public function setUserProvider(UserProvider $userProvider): void
     {
         $this->userProvider = $userProvider;
     }
@@ -91,7 +84,7 @@ class Auth0Integration extends AbstractSsoServiceIntegration
     /**
      * Set the callback URL to sso_login.
      */
-    public function getAuthCallbackUrl()
+    public function getAuthCallbackUrl(): string
     {
         return sprintf(
             '%s://%s%s',
@@ -99,19 +92,19 @@ class Auth0Integration extends AbstractSsoServiceIntegration
             $this->router->getContext()->getHost(),
             $this->router->generate('mautic_sso_login_check',
                 ['integration' => $this->getName()],
-                true //absolute
+                true // absolute
             )
         );
     }
 
     /**
-     * @param array $response
+     * @param string|bool $response
      *
-     * @return bool|User
+     * @return false|User
      *
      * @throws \Doctrine\ORM\ORMException
      */
-    public function getUser($response)
+    public function getUser($response): bool|User
     {
         $this->setClient('https://'.rtrim($this->keys['domain'], '/').'/');
 
@@ -123,12 +116,12 @@ class Auth0Integration extends AbstractSsoServiceIntegration
                 throw new AuthenticationServiceException('Management token');
             }
 
-            $auth0User       = $this->getAuth0User($userInfo['sub'], $managementToken);
-        } catch (\GuzzleHttp\Exception\GuzzleException $exception) {
+            $auth0User = $this->getAuth0User($userInfo['sub'], $managementToken);
+        } catch (GuzzleException) {
             return false;
         }
 
-        if (is_array($auth0User) && isset($auth0User['user_id']) && $auth0User['user_id'] === $userInfo['sub']) {
+        if (isset($auth0User['user_id']) && $auth0User['user_id'] === $userInfo['sub']) {
             // There is a user
             $this->auth0User = $auth0User;
 
@@ -139,12 +132,12 @@ class Auth0Integration extends AbstractSsoServiceIntegration
     }
 
     /**
-     * @param $data
-     * @param $keys
+     * @param array<mixed> $data
+     * @param array<mixed> $keys
      *
-     * @return string
+     * @return string|int|bool|array<string|int|bool>
      */
-    protected function getAuth0ValueRecursive($data, $keys)
+    protected function getAuth0ValueRecursive(array $data, array $keys): array|bool|int|string
     {
         $actualKey = array_shift($keys);
 
@@ -159,19 +152,19 @@ class Auth0Integration extends AbstractSsoServiceIntegration
         return '';
     }
 
-    protected function setClient($baseUri)
+    protected function setClient(string $baseUri): void
     {
         $this->client = new Client(['base_uri' => $baseUri]);
     }
 
     /**
-     * @param $token
+     * @param array<mixed> $token
      *
-     * @return mixed
+     * @return array<mixed>
      *
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
-    protected function getUserInfo($token)
+    protected function getUserInfo(array $token): array
     {
         $response = $this->client->request(
             'GET',
@@ -184,15 +177,15 @@ class Auth0Integration extends AbstractSsoServiceIntegration
             ]
         )->getBody()->getContents();
 
-        return \GuzzleHttp\json_decode($response, true);
+        return json_decode($response, true, 512, JSON_THROW_ON_ERROR);
     }
 
     /**
-     * @return mixed
+     * @return array<mixed>
      *
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
-    protected function getManagementToken()
+    protected function getManagementToken(): array
     {
         $response = $this->client->request(
             'POST',
@@ -208,18 +201,17 @@ class Auth0Integration extends AbstractSsoServiceIntegration
             ]
         )->getBody()->getContents();
 
-        return \GuzzleHttp\json_decode($response, true);
+        return json_decode($response, true, 512, JSON_THROW_ON_ERROR);
     }
 
     /**
-     * @param $userId
-     * @param $managementToken
+     * @param array<mixed> $managementToken
      *
-     * @return mixed
+     * @return array<mixed>
      *
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
-    protected function getAuth0User($userId, $managementToken)
+    protected function getAuth0User(string $userId, array $managementToken): array
     {
         $response = $this->client->request(
             'GET',
@@ -232,22 +224,20 @@ class Auth0Integration extends AbstractSsoServiceIntegration
             ]
         )->getBody()->getContents();
 
-        return \GuzzleHttp\json_decode($response, true);
+        return json_decode($response, true, 512, JSON_THROW_ON_ERROR);
     }
 
     /**
-     * @return User
-     *
      * @throws \Doctrine\ORM\ORMException
      */
-    protected function createMauticUserFromAuth0User()
+    protected function createMauticUserFromAuth0User(): User
     {
         $mauticUser = null;
 
         // Find existing user
         try {
             $mauticUser = $this->userProvider->loadUserByUsername($this->setValueFromAuth0User('auth0_username', 'email'));
-        } catch (\Exception $exception) {
+        } catch (\Throwable) {
             // No User found. Do nothing.
         }
 
@@ -271,11 +261,14 @@ class Auth0Integration extends AbstractSsoServiceIntegration
             );
 
         $auth0Role = $this->setValueFromAuth0User('auth0_role');
-        if ($auth0Role) {
-            $roleRepository = $this->em->getRepository('MauticUserBundle:Role');
-            $mauticRole     = $roleRepository->findOneBy(['id' => $auth0Role]);
-            if ($mauticRole) {
-                $mauticUser->setRole($mauticRole);
+        if (is_array($auth0Role)) {
+            $auth0RoleIdentifier = array_shift($auth0Role);
+            if (is_numeric($auth0RoleIdentifier)) {
+                $roleRepository = $this->em->getRepository(Role::class);
+                $mauticRole = $roleRepository->find($auth0RoleIdentifier);
+                if (null !== $mauticRole) {
+                    $mauticUser->setRole($mauticRole);
+                }
             }
         }
 
@@ -283,12 +276,9 @@ class Auth0Integration extends AbstractSsoServiceIntegration
     }
 
     /**
-     * @param string $configurationParameter
-     * @param string $fallback
-     *
-     * @return mixed|string
+     * @return string|bool|int|array<string|bool|int>
      */
-    protected function setValueFromAuth0User($configurationParameter, $fallback = '')
+    protected function setValueFromAuth0User(string $configurationParameter, string $fallback = ''): array|bool|int|string
     {
         $value = $this->getAuth0ValueRecursive(
             $this->auth0User,
@@ -297,16 +287,16 @@ class Auth0Integration extends AbstractSsoServiceIntegration
 
         // Fallback if there is no username
         if ('' === $value && '' !== $fallback) {
-            $value = isset($this->auth0User[$fallback]) ? $this->auth0User[$fallback] : '';
+            $value = $this->auth0User[$fallback] ?? '';
         }
 
         return $value;
     }
 
     /**
-     * @return array
+     * @return array<string, string>
      */
-    public function getRequiredKeyFields()
+    public function getRequiredKeyFields(): array
     {
         return [
             'domain'        => 'plugin.auth0.integration.keyfield.domain',

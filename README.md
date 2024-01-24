@@ -14,7 +14,7 @@ This Mautic plugin allows logins and sign ups via Auth0.
 ## Installation
 1. Open a Terminal / Console window
 2. Change directory to the mautic root (i.e. `cd /var/www/mautic`)
-3. Clone this repository into plugins/MauticAuth0Bundle (`git clone https://github.com/Leuchtfeuer/auth0-for-mautic.git plugins/MauticAuth0Bundle`)
+3. Clone this repository into plugins/LeuchtfeuerAuth0Bundle (`git clone https://github.com/Leuchtfeuer/auth0-for-mautic.git plugins/LeuchtfeuerAuth0Bundle`)
 4. Clear the cache (`php app/console cache:clear`)
 5. Go to Settings -> Plugins and click on "Install/Upgrade Plugins"
 6. Choose the Auth0 Plugin, adapt the configuration and publish it
@@ -23,10 +23,11 @@ There is also the possibility to add this package directly into your project com
 
 We are currently supporting following Mautic versions:<br><br>
 
-| Bundle Version | Mautic v4 Support | Mautic v3 Support | Mautic v2 Support |
-| :-: | :-: | :-: |
-| 1.1.x          | x                 | x                 | -                 |
-| 1.0.x          | -                 | -                 | x                 |
+| Bundle Version | Mautic v5 Support | Mautic v4 Support | Mautic v3 Support | Mautic v2 Support |
+|:--------------:|:-----------------:|:-----------------:|:-----------------:|:-----------------:|
+|     2.0.x      |         x         |         -         |         -         |         -         |
+|     1.1.x      |         -         |         x         |         x         |         -         |
+|     1.0.x      |         -         |         -         |         x         |         x         |
 
 ### Plugin Configuration
 <table>
@@ -121,6 +122,9 @@ If you want to map a role from Auth0 to your Mautic-User you have to alter your 
 
 ## Update from Mautic 2.x.x to Mautic 3.x.x
 When updating the plugin, please make sure to change the callback URL from `../s/sso_login/Auth0Auth` to `../s/sso_login/Auth0` in your Auth0 application settings.
+
+## Update from Mautic 4.x.x to Mautic 5.x.x
+When updating the plugin, please make sure to change the callback URL from `../s/sso_login/Auth0` to `../s/sso_login/LeuchtfeuerAuth0` in your Auth0 application settings.
 
 ### Author
 Leuchtfeuer Digital Marketing GmbH

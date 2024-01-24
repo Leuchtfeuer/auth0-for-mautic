@@ -1,6 +1,6 @@
 <?php
 
-namespace MauticPlugin\MauticAuth0Bundle\Form\Type;
+namespace MauticPlugin\LeuchtfeuerAuth0Bundle\Form\Type;
 
 use Mautic\CoreBundle\Form\DataTransformer\ArrayLinebreakTransformer;
 use Mautic\CoreBundle\Form\Type\YesNoButtonGroupType;
@@ -11,7 +11,10 @@ use Symfony\Component\Form\FormBuilderInterface;
 
 class ConfigType extends AbstractType
 {
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    /**
+     * @param array<mixed> $options
+     */
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add(
             'auth0_username',
@@ -183,10 +186,7 @@ class ConfigType extends AbstractType
         );
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getName()
+    public function getBlockPrefix(): string
     {
         return 'auth0config';
     }

@@ -1,0 +1,56 @@
+{% block _config_auth0config_widget %}
+<div class="panel panel-primary">
+    <div class="panel-heading">
+        <h3 class="panel-title">{{ 'mautic.config.tab.auth0config' | trans }}</h3>
+    </div>
+    <div class="panel-body">
+        <div class="alert alert-info">
+            {% trans %}plugin.auth0.config.form.auth0.hint{% endtrans %}
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                {{ form_row(form.auth0_username) }}
+            </div>
+            <div class="col-md-6">
+                {{ form_row(form.auth0_email) }}
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-md-6">
+                {{ form_row(form.auth0_firstName) }}
+            </div>
+            <div class="col-md-6">
+                {{ form_row(form.auth0_lastName) }}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                {{ form_row(form.auth0_position) }}
+            </div>
+            <div class="col-md-6">
+                {{ form_row(form.auth0_signature) }}
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-md-6">
+                {{ form_row(form.auth0_timezone) }}
+            </div>
+            <div class="col-md-6">
+                {{ form_row(form.auth0_locale) }}
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-md-6">
+                {{ form_row(form.auth0_role) }}
+                {{ form_row(form.multiple_roles) }}
+            </div>
+            <div class="col-md-6">
+                {{ form_row(form.rolemapping) }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock _config_auth0config_widget %}
