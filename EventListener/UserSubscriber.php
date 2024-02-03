@@ -38,11 +38,13 @@ class UserSubscriber implements EventSubscriberInterface
         if (LeuchtfeuerAuth0Integration::NAME === $authenticatingService) {
             $integration = $event->getIntegration($authenticatingService);
 
-            if ($integration instanceof LeuchtfeuerAuth0Integration) {
-                $integration->setCoreParametersHelper($this->coreParametersHelper);
-                $integration->setUserProvider($event->getUserProvider());
-                $result = $this->authenticateService($integration, $event->isLoginCheck());
+            if (!$integration instanceof LeuchtfeuerAuth0Integration) {
+                throw new \RuntimeException('The integration is not found.');
             }
+
+            $integration->setCoreParametersHelper($this->coreParametersHelper);
+            $integration->setUserProvider($event->getUserProvider());
+            $result = $this->authenticateService($integration, $event->isLoginCheck());
 
             if ($result instanceof User) {
                 $event->setIsAuthenticated($authenticatingService, $result, $integration->shouldAutoCreateNewUser());
@@ -53,12 +55,14 @@ class UserSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @return bool|RedirectResponse
+     * @return bool|RedirectResponse|User
      */
     private function authenticateService(LeuchtfeuerAuth0Integration $integration, bool $loginCheck)
     {
         if ($loginCheck) {
-            if ($authenticatedUser = $integration->ssoAuthCallback()) {
+            /** @var false|User $authenticatedUser */
+            $authenticatedUser = $integration->ssoAuthCallback();
+            if ($authenticatedUser instanceof User) {
                 return $authenticatedUser;
             }
         } else {

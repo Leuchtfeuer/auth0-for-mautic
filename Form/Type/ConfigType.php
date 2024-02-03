@@ -159,7 +159,9 @@ class ConfigType extends AbstractType
                 ],
                 'attr' => [
                     'class' => 'form-control',
-                    'data'  => (bool) $options['data']['multiple_roles'],
+                    'data'  => !is_array($options['data']) || !isset($options['data']['multiple_roles']) || !is_bool($options['data']['multiple_roles'])
+                        ? false
+                        : $options['data']['multiple_roles'],
                 ],
                 'required' => false,
             ]

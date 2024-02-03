@@ -10,6 +10,7 @@ use Mautic\PluginBundle\Integration\AbstractSsoServiceIntegration;
 use Mautic\UserBundle\Entity\Role;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Security\Provider\UserProvider;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 
 class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
@@ -19,7 +20,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     protected ClientInterface $client;
 
     /**
-     * @var array<string|int|bool, array<string|int|bool|array<string|int|bool>>>
+     * @var array<string, string|int|bool|array<string|int|bool>>
      */
     protected array $auth0User = [];
 
@@ -92,13 +93,13 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             $this->router->getContext()->getHost(),
             $this->router->generate('mautic_sso_login_check',
                 ['integration' => $this->getName()],
-                true // absolute
+                UrlGeneratorInterface::ABSOLUTE_PATH
             )
         );
     }
 
     /**
-     * @param string|bool $response
+     * @param string|bool|array<string>|mixed $response
      *
      * @return false|User
      *
@@ -107,6 +108,10 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     public function getUser($response): bool|User
     {
         $this->setClient('https://'.rtrim($this->keys['domain'], '/').'/');
+
+        if (!is_array($response)) {
+            throw new \RuntimeException('The response for getUser must be an array.');
+        }
 
         try {
             $userInfo        = $this->getUserInfo($response);
@@ -132,8 +137,8 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     }
 
     /**
-     * @param array<mixed> $data
-     * @param array<mixed> $keys
+     * @param array<array<bool|int|string>|bool|int|string> $data
+     * @param array<string>                                 $keys
      *
      * @return string|int|bool|array<string|int|bool>
      */
@@ -160,7 +165,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     /**
      * @param array<mixed> $token
      *
-     * @return array<mixed>
+     * @return array<string, string>
      *
      * @throws GuzzleException
      */
@@ -177,7 +182,13 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             ]
         )->getBody()->getContents();
 
-        return json_decode($response, true, 512, JSON_THROW_ON_ERROR);
+        $apiResponse = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
+
+        if (!is_array($apiResponse)) {
+            throw new \RuntimeException('The api response must be an array. '.print_r($response, true));
+        }
+
+        return $apiResponse;
     }
 
     /**
@@ -201,13 +212,19 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             ]
         )->getBody()->getContents();
 
-        return json_decode($response, true, 512, JSON_THROW_ON_ERROR);
+        $apiResponse = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
+
+        if (!is_array($apiResponse)) {
+            throw new \RuntimeException('The api response must be an array. '.print_r($response, true));
+        }
+
+        return $apiResponse;
     }
 
     /**
      * @param array<mixed> $managementToken
      *
-     * @return array<mixed>
+     * @return array<string, string>
      *
      * @throws GuzzleException
      */
@@ -224,7 +241,13 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             ]
         )->getBody()->getContents();
 
-        return json_decode($response, true, 512, JSON_THROW_ON_ERROR);
+        $apiResponse = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
+
+        if (!is_array($apiResponse)) {
+            throw new \RuntimeException('The api response must be an array. '.print_r($response, true));
+        }
+
+        return $apiResponse;
     }
 
     /**
@@ -236,7 +259,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 
         // Find existing user
         try {
-            $mauticUser = $this->userProvider->loadUserByUsername($this->setValueFromAuth0User('auth0_username', 'email'));
+            $mauticUser = $this->userProvider->loadUserByIdentifier($this->getStringValue('auth0_username', 'email'));
         } catch (\Throwable) {
             // No User found. Do nothing.
         }
@@ -246,26 +269,29 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             $mauticUser = new User();
         }
 
+        $role = $this->getUserRole();
+
+        if (null === $role || $role instanceof Role) {
+            $mauticUser->setRole($role);
+        }
+
         // Override user data by data provided by auth0
         $mauticUser
-            ->setUsername($this->setValueFromAuth0User('auth0_username', 'email'))
-            ->setEmail($this->setValueFromAuth0User('auth0_email', 'email'))
-            ->setFirstName($this->setValueFromAuth0User('auth0_firstName', 'given_name'))
-            ->setLastName($this->setValueFromAuth0User('auth0_lastName', 'family_name'))
-            ->setTimezone($this->setValueFromAuth0User('auth0_timezone'))
-            ->setLocale($this->setValueFromAuth0User('auth0_locale'))
-            ->setSignature($this->setValueFromAuth0User('auth0_signature'))
-            ->setPosition($this->setValueFromAuth0User('auth0_position'))
-            ->setRole(
-                $this->getUserRole()
-            );
+            ->setUsername($this->getStringValue('auth0_username', 'email'))
+            ->setEmail($this->getStringValue('auth0_email', 'email'))
+            ->setFirstName($this->getStringValue('auth0_firstName', 'given_name'))
+            ->setLastName($this->getStringValue('auth0_lastName', 'family_name'))
+            ->setTimezone($this->getStringValue('auth0_timezone'))
+            ->setLocale($this->getStringValue('auth0_locale'))
+            ->setSignature($this->getStringValue('auth0_signature'))
+            ->setPosition($this->getStringValue('auth0_position'));
 
         $auth0Role = $this->setValueFromAuth0User('auth0_role');
         if (is_array($auth0Role)) {
             $auth0RoleIdentifier = array_shift($auth0Role);
             if (is_numeric($auth0RoleIdentifier)) {
                 $roleRepository = $this->em->getRepository(Role::class);
-                $mauticRole = $roleRepository->find($auth0RoleIdentifier);
+                $mauticRole     = $roleRepository->find($auth0RoleIdentifier);
                 if (null !== $mauticRole) {
                     $mauticUser->setRole($mauticRole);
                 }
@@ -280,14 +306,31 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
      */
     protected function setValueFromAuth0User(string $configurationParameter, string $fallback = ''): array|bool|int|string
     {
+        $configParameter = $this->coreParametersHelper->get($configurationParameter);
+
+        if (!is_string($configParameter)) {
+            throw new \RuntimeException('The config value "'.$configurationParameter.'" must contain a string.');
+        }
+
         $value = $this->getAuth0ValueRecursive(
             $this->auth0User,
-            explode('.', $this->coreParametersHelper->get($configurationParameter))
+            explode('.', $configParameter)
         );
 
         // Fallback if there is no username
         if ('' === $value && '' !== $fallback) {
             $value = $this->auth0User[$fallback] ?? '';
+        }
+
+        return $value;
+    }
+
+    private function getStringValue(string $configurationParameter, string $fallback = ''): string
+    {
+        $value = $this->setValueFromAuth0User($configurationParameter, $fallback);
+
+        if (!is_string($value)) {
+            throw new \RuntimeException('The value "'.$configurationParameter.'" must be a string.');
         }
 
         return $value;

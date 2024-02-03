@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace MauticPlugin\LeuchtfeuerAuth0Bundle\Tests\Integration;
 
@@ -8,6 +10,7 @@ use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\PluginBundle\Entity\Integration;
 use Mautic\UserBundle\Entity\Role;
 use Mautic\UserBundle\Entity\RoleRepository;
+use Mautic\UserBundle\Entity\User;
 use MauticPlugin\LeuchtfeuerAuth0Bundle\Integration\LeuchtfeuerAuth0Integration;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -18,12 +21,12 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
 {
     public function testGetUserHappyPath(): void
     {
-        $newUserRole = $this->createMock(Role::class);
-        $apiUserRole = $this->createMock(Role::class);
+        $newUserRole     = $this->createMock(Role::class);
+        $apiUserRole     = $this->createMock(Role::class);
         $newUserRoleName = '101101';
-        $apiRoleId = '176254252246';
-        $accessSettings = ['domain' => 'dom.ain', 'client_secret' => 'Secret!', 'client_id' => 'client id!', 'audience' => 'The audience'];
-        $token = ['token_type' => 'type', 'access_token' => 'access'];
+        $apiRoleId       = '176254252246';
+        $accessSettings  = ['domain' => 'dom.ain', 'client_secret' => 'Secret!', 'client_id' => 'client id!', 'audience' => 'The audience'];
+        $token           = ['token_type' => 'type', 'access_token' => 'access'];
 
         $integration = $this->getMockBuilder(LeuchtfeuerAuth0Integration::class)
             ->disableOriginalConstructor()
@@ -77,7 +80,7 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
         $integration->setIntegrationSettings($settings);
         $integration->setCoreParametersHelper($coreParametersHelper);
         $user = $integration->getUser($token);
-        self::assertNotFalse($user);
+        self::assertInstanceOf(User::class, $user);
 
         self::assertSame('some@email.com', $user->getEmail());
         self::assertSame('some@email.com', $user->getUserIdentifier());
@@ -92,10 +95,10 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
 
     public function testGetUserErrorRole(): void
     {
-        $newUserRole = $this->createMock(Role::class);
+        $newUserRole     = $this->createMock(Role::class);
         $newUserRoleName = '101101';
-        $accessSettings = ['domain' => 'dom.ain', 'client_secret' => 'Secret!', 'client_id' => 'client id!', 'audience' => 'The audience'];
-        $token = ['token_type' => 'type', 'access_token' => 'access'];
+        $accessSettings  = ['domain' => 'dom.ain', 'client_secret' => 'Secret!', 'client_id' => 'client id!', 'audience' => 'The audience'];
+        $token           = ['token_type' => 'type', 'access_token' => 'access'];
 
         $integration = $this->getMockBuilder(LeuchtfeuerAuth0Integration::class)
             ->disableOriginalConstructor()
@@ -141,7 +144,7 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
         $integration->setIntegrationSettings($settings);
         $integration->setCoreParametersHelper($coreParametersHelper);
         $user = $integration->getUser($token);
-        self::assertNotFalse($user);
+        self::assertInstanceOf(User::class, $user);
 
         self::assertSame('some@email.com', $user->getEmail());
         self::assertSame('some@email.com', $user->getUserIdentifier());
@@ -156,6 +159,7 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
 
     /**
      * @param array<mixed> $data
+     *
      * @return MockObject&ResponseInterface
      */
     private function getGuzzleResponse(array $data)
@@ -172,60 +176,56 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
     }
 
     /**
+     * @param array<string, string> $accessSettings
+     * @param array<string, string> $token
+     * @param array<mixed>          $userDataReplacement
+     *
      * @return ClientInterface&MockObject
      */
     private function getClient(LeuchtfeuerAuth0Integration $integration, array $accessSettings, array $token, array $userDataReplacement)
     {
-        $userInfoSub = 'some_service|some-id-101';
+        $userInfoSub    = 'some_service|some-id-101';
         $managementData = ['token_type' => 'Token type', 'access_token' => 'Access token'];
-        $userData = [
-            'email' => 'some@email.com',
+        $userData       = [
+            'email'          => 'some@email.com',
             'email_verified' => true,
-            'name' => 'First1 Last1',
-            'given_name' => 'First',
-            'family_name' => 'Last',
-            'picture' => 'https://lh3.googleusercontent.com/a/one-ne',
-            'locale' => 'de',
-            'updated_at' => '2024-01-31T08:11:48.233Z',
-            'user_id' => $userInfoSub,
-            'nickname' => 'nick.name',
-            'identities' => [
+            'name'           => 'First1 Last1',
+            'given_name'     => 'First',
+            'family_name'    => 'Last',
+            'picture'        => 'https://lh3.googleusercontent.com/a/one-ne',
+            'locale'         => 'de',
+            'updated_at'     => '2024-01-31T08:11:48.233Z',
+            'user_id'        => $userInfoSub,
+            'nickname'       => 'nick.name',
+            'identities'     => [
                 0 => [
-
-                    'provider' => explode('|', $userInfoSub)[0],
-                    'user_id' => explode('|', $userInfoSub)[1],
+                    'provider'   => explode('|', $userInfoSub)[0],
+                    'user_id'    => explode('|', $userInfoSub)[1],
                     'connection' => explode('|', $userInfoSub)[1],
-                    'isSocial' => true,
+                    'isSocial'   => true,
                 ],
             ],
-            'created_at' => '2018-08-08T08:09:07.143Z',
-            'user_metadata' =>
-                [
-                    'admin' => true,
-                    'foo' => 'bar',
+            'created_at'    => '2018-08-08T08:09:07.143Z',
+            'user_metadata' => [
+                    'admin'      => true,
+                    'foo'        => 'bar',
                     'login_name' => 'the.login',
-                    'name' => 'First2 Last2, Company name',
+                    'name'       => 'First2 Last2, Company name',
                 ],
             'idp_tenant_domain' => 'tenant.com',
-            'app_metadata' =>
-                [
+            'app_metadata'      => [
                     'is_signup' => true,
-                    'roles' =>
-                        [
+                    'roles'     => [
                             0 => 'admin',
                         ],
 
-                    'authorization' =>
-                        [
-                            'groups' =>
-                                [
+                    'authorization' => [
+                            'groups' => [
                                 ],
-
                         ],
-
                 ],
-            'last_ip' => '127.0.3.16',
-            'last_login' => '2024-01-29T15:50:43.556Z',
+            'last_ip'      => '127.0.3.16',
+            'last_login'   => '2024-01-29T15:50:43.556Z',
             'logins_count' => 147,
         ];
 
@@ -278,7 +278,7 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
                     return $this->getGuzzleResponse($userData);
                 }
 
-                self::fail('Unknown URI ' . $uri);
+                self::fail('Unknown URI '.$uri);
             });
 
         $reflectionObject   = new \ReflectionObject($integration);

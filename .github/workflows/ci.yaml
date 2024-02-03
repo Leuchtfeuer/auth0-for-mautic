@@ -24,5 +24,7 @@ jobs:
         run: composer install
       - name: Check PHP CS
         run: ./vendor/bin/php-cs-fixer fix --config .php-cs-fixer.php --dry-run --using-cache no --show-progress dots -v
+      - name: Run PHPStan
+        run: ./vendor/bin/phpstan --no-progress
       - name: Run PHPUnit
         run: ./vendor/bin/phpunit
