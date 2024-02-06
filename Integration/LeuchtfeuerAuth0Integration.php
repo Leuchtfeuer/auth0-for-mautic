@@ -308,6 +308,10 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     {
         $configParameter = $this->coreParametersHelper->get($configurationParameter);
 
+        if (null === $configParameter) {
+            return $this->auth0User[$fallback] ?? '';
+        }
+
         if (!is_string($configParameter)) {
             throw new \RuntimeException('The config value "'.$configurationParameter.'" must contain a string.');
         }

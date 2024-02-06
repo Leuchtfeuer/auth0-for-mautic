@@ -43,7 +43,7 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
                 ['auth0_email', null, 'email'],
                 ['auth0_firstName', null, ''],
                 ['auth0_lastName', null, ''],
-                ['auth0_timezone', null, ''],
+                ['auth0_timezone', null, null],
                 ['auth0_locale', null, 'locale'],
                 ['auth0_signature', null, ''],
                 ['auth0_position', null, ''],
