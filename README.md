@@ -23,10 +23,11 @@ There is also the possibility to add this package directly into your project com
 
 We are currently supporting following Mautic versions:<br><br>
 
-| Bundle Version | Mautic v4 Support | Mautic v3 Support | Mautic v2 Support |
-| :-: | :-: | :-: |
-| 1.1.x          | x                 | x                 | -                 |
-| 1.0.x          | -                 | -                 | x                 |
+| Bundle Version | Mautic v5 Support | Mautic v4 Support | Mautic v3 Support | Mautic v2 Support |
+|:--------------:|:-----------------:|:-----------------:|:-----------------:|:-----------------:|
+|     2.0.x      |         x         |         -         |         -         |         -         |
+|     1.1.x      |         -         |         x         |         x         |         -         |
+|     1.0.x      |         -         |         -         |         x         |         x         |
 
 ### Plugin Configuration
 <table>
