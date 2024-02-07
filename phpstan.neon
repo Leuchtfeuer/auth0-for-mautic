@@ -1,0 +1,18 @@
+includes:
+        - vendor/phpstan/phpstan-deprecation-rules/rules.neon
+        - vendor/phpstan/phpstan-strict-rules/rules.neon
+        - vendor/phpstan/phpstan-phpunit/extension.neon
+        - vendor/phpstan/phpstan-phpunit/rules.neon
+
+parameters:
+    level: max
+    treatPhpDocTypesAsCertain: false
+    paths:
+        - .
+    excludePaths:
+        - vendor
+    ignoreErrors:
+        - message: '#^Constant MAUTIC_VERSION not found.$#'
+          path: Config/services.php
+          count: 1
+

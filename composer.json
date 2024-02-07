@@ -11,35 +11,64 @@
   "type": "mautic-plugin",
   "license": "GPL-3.0-or-later",
   "homepage": "https://www.Leuchtfeuer.com",
+  "minimum-stability": "dev",
   "authors": [
     {
-      "name": "Florian Wessels",
-      "email": "f.wessels@Leuchtfeuer.com",
-      "homepage": "https://www.Leuchtfeuer.com",
-      "role": "Developer"
-    },
-    {
-      "name": "Lukas Günther",
-      "email": "l.guenther@Leuchtfeuer.com",
-      "homepage": "https://www.Leuchtfeuer.com",
-      "role": "Developer"
+      "name": "Leuchtfeuer Digital Marketing GmbH",
+      "email": "mautic-plugins@Leuchtfeuer.com",
+      "homepage": "https://www.Leuchtfeuer.com"
     }
   ],
   "support": {
     "issues": "https://github.com/Leuchtfeuer/auth0-for-mautic/issues",
     "source": "https://github.com/Leuchtfeuer/auth0-for-mautic",
-    "email": "dev@Leuchtfeuer.com"
+    "email": "mautic-plugins@Leuchtfeuer.com"
   },
   "autoload": {
     "psr-4": {
-      "MauticPlugin\\MauticAuth0Bundle\\": ""
+      "MauticPlugin\\LeuchtfeuerAuth0Bundle\\": ""
     }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "MauticPlugin\\LeuchtfeuerAuth0Bundle\\Tests\\": "Tests"
+    }
+  },
+  "extra": {
+    "install-directory-name": "LeuchtfeuerAuth0Bundle"
   },
   "replace": {
     "bitmotion/mautic-auth0-bundle": "self.version"
   },
   "require": {
-    "guzzlehttp/guzzle": "^6.2|^7.2",
-    "symfony/security": "^2.8|^3.4|^4.4"
-  }
+    "php": "^8.0",
+    "ext-json": "*",
+    "guzzlehttp/guzzle": "^7.2",
+    "mautic/core-lib": "^5.0"
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.4",
+    "phpunit/phpunit": "^9.5",
+    "phpstan/phpstan": "^1.0",
+    "phpstan/phpstan-deprecation-rules": "^1.0",
+    "phpstan/phpstan-phpunit": "^1.0",
+    "phpstan/phpstan-strict-rules": "^1.0"
+  },
+  "scripts": {
+    "fixcs": "./vendor/bin/php-cs-fixer fix"
+  },
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/mautic/FOSOAuthServerBundle.git"
+    },
+    {
+      "type": "git",
+      "url": "https://github.com/mautic/SpBundle.git"
+    },
+    {
+      "type": "git",
+      "url": "https://github.com/mautic/SymfonyBridgeBundle.git"
+    }
+  ]
 }
