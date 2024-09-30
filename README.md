@@ -15,7 +15,7 @@ This Mautic plugin allows logins and sign ups via Auth0.
 1. Open a Terminal / Console window
 2. Change directory to the mautic root (i.e. `cd /var/www/mautic`)
 3. Clone this repository into plugins/LeuchtfeuerAuth0Bundle (`git clone https://github.com/Leuchtfeuer/auth0-for-mautic.git plugins/LeuchtfeuerAuth0Bundle`)
-4. Clear the cache (`php app/console cache:clear`)
+4. Clear the cache (`php bin/console cache:clear`)
 5. Go to Settings -> Plugins and click on "Install/Upgrade Plugins"
 6. Choose the Auth0 Plugin, adapt the configuration and publish it
 
