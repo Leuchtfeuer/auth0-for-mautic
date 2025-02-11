@@ -13,41 +13,40 @@ use Symfony\Component\HttpFoundation\Response;
 
 class UserSubscriber implements EventSubscriberInterface
 {
-    /**
-     * @var CoreParametersHelper
-     */
-    protected $coreParametersHelper;
 
-    public function __construct(CoreParametersHelper $coreParametersHelper)
+    public function __construct(protected CoreParametersHelper $coreParametersHelper)
     {
-        $this->coreParametersHelper = $coreParametersHelper;
     }
-
     /**
      * @return array
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             UserEvents::USER_PRE_AUTHENTICATION => ['onUserAuthentication', 0],
         ];
     }
 
-    public function onUserAuthentication(AuthenticationEvent $event)
+    public function onUserAuthentication(AuthenticationEvent $event): void
     {
         $result                = false;
         $authenticatingService = $event->getAuthenticatingService();
 
+
         if ('Auth0' === $authenticatingService) {
+
             $integration = $event->getIntegration($authenticatingService);
 
             if ($integration instanceof Auth0Integration) {
+
                 $integration->setCoreParametersHelper($this->coreParametersHelper);
+
                 $integration->setUserProvider($event->getUserProvider());
                 $result = $this->authenticateService($integration, $event->isLoginCheck());
             }
 
             if ($result instanceof User) {
+
                 $event->setIsAuthenticated($authenticatingService, $result, $integration->shouldAutoCreateNewUser());
             } elseif ($result instanceof Response) {
                 $event->setResponse($result);
@@ -60,7 +59,7 @@ class UserSubscriber implements EventSubscriberInterface
      *
      * @return bool|RedirectResponse
      */
-    private function authenticateService(Auth0Integration $integration, $loginCheck)
+    private function authenticateService(Auth0Integration $integration, $loginCheck): RedirectResponse|bool
     {
         if ($loginCheck) {
             if ($authenticatedUser = $integration->ssoAuthCallback()) {
@@ -68,9 +67,7 @@ class UserSubscriber implements EventSubscriberInterface
             }
         } else {
             $loginUrl = $integration->getAuthLoginUrl();
-            $response = new RedirectResponse($loginUrl);
-
-            return $response;
+            return new RedirectResponse($loginUrl);
         }
 
         return false;

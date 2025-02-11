@@ -73,7 +73,7 @@ class Auth0Integration extends AbstractSsoServiceIntegration
     /**
      * @return bool
      */
-    public function shouldAutoCreateNewUser()
+    public function shouldAutoCreateNewUser(): bool
     {
         return true;
     }

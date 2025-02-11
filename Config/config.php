@@ -15,40 +15,6 @@ return [
     'version'     => '1.1.1',
     'author'      => 'Leuchtfeuer Digital Marketing GmbH',
     'services'    => [
-        'events' => [
-            'mautic.auth0.user.subscriber' => [
-                'class'     => \MauticPlugin\MauticAuth0Bundle\EventListener\UserSubscriber::class,
-                'arguments' => [
-                    'mautic.helper.core_parameters',
-                ],
-            ],
-            'mautic.auth0.config.subscriber' => [
-                'class' => \MauticPlugin\MauticAuth0Bundle\EventListener\ConfigSubscriber::class,
-            ],
-        ],
-        'integrations' => [
-            'mautic.integration.auth0' => [
-                'class'     => \MauticPlugin\MauticAuth0Bundle\Integration\Auth0Integration::class,
-                'arguments' => [
-                    'event_dispatcher',
-                    'mautic.helper.cache_storage',
-                    'doctrine.orm.entity_manager',
-                    'session',
-                    'request_stack',
-                    'router',
-                    'translator',
-                    'logger',
-                    'mautic.helper.encryption',
-                    'mautic.lead.model.lead',
-                    'mautic.lead.model.company',
-                    'mautic.helper.paths',
-                    'mautic.core.model.notification',
-                    'mautic.lead.model.field',
-                    'mautic.plugin.model.integration_entity',
-                    'mautic.lead.model.dnc',
-                ],
-            ],
-        ],
         'forms' => [
             'mautic.form.type.auth0config' => [
                 'class' => \MauticPlugin\MauticAuth0Bundle\Form\Type\ConfigType::class,
