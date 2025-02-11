@@ -13,7 +13,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class UserSubscriber implements EventSubscriberInterface
 {
-
     public function __construct(protected CoreParametersHelper $coreParametersHelper)
     {
     }
@@ -30,7 +29,6 @@ class UserSubscriber implements EventSubscriberInterface
 
     public function onUserAuthentication(AuthenticationEvent $event): void
     {
-        $result                = false;
         $authenticatingService = $event->getAuthenticatingService();
 
         if (LeuchtfeuerAuth0Integration::NAME === $authenticatingService) {
@@ -52,9 +50,6 @@ class UserSubscriber implements EventSubscriberInterface
         }
     }
 
-    /**
-     * @return bool|RedirectResponse|User
-     */
     private function authenticateService(LeuchtfeuerAuth0Integration $integration, bool $loginCheck): RedirectResponse|bool|User
     {
         if ($loginCheck) {
@@ -65,6 +60,7 @@ class UserSubscriber implements EventSubscriberInterface
             }
         } else {
             $loginUrl = $integration->getAuthLoginUrl();
+
             return new RedirectResponse($loginUrl);
         }
 
