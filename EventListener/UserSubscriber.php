@@ -13,11 +13,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class UserSubscriber implements EventSubscriberInterface
 {
-    protected CoreParametersHelper $coreParametersHelper;
 
-    public function __construct(CoreParametersHelper $coreParametersHelper)
+    public function __construct(protected CoreParametersHelper $coreParametersHelper)
     {
-        $this->coreParametersHelper = $coreParametersHelper;
     }
 
     /**
