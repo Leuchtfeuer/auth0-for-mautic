@@ -57,7 +57,7 @@ class UserSubscriber implements EventSubscriberInterface
     /**
      * @return bool|RedirectResponse|User
      */
-    private function authenticateService(LeuchtfeuerAuth0Integration $integration, bool $loginCheck)
+    private function authenticateService(LeuchtfeuerAuth0Integration $integration, bool $loginCheck): RedirectResponse|bool|User
     {
         if ($loginCheck) {
             /** @var false|User $authenticatedUser */
@@ -67,9 +67,7 @@ class UserSubscriber implements EventSubscriberInterface
             }
         } else {
             $loginUrl = $integration->getAuthLoginUrl();
-            $response = new RedirectResponse($loginUrl);
-
-            return $response;
+            return new RedirectResponse($loginUrl);
         }
 
         return false;
