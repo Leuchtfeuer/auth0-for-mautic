@@ -143,7 +143,6 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 
         if (isset($auth0User['user_id']) && $auth0User['user_id'] === $userInfo['sub']) {
             // There is a user
-            // @phpstan-ignore-next-line
             $this->auth0User = $auth0User;
 
             return $this->createMauticUserFromAuth0User();
