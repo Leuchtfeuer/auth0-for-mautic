@@ -180,7 +180,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     /**
      * @param array<mixed> $token
      *
-     * @return array<mixed, mixed>
+     * @return array<string, string>
      *
      * @throws GuzzleException
      */
@@ -255,7 +255,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     /**
      * @param array<mixed> $managementToken
      *
-     * @return array<mixed, mixed>
+     * @return array<string, string>
      *
      * @throws GuzzleException
      */
@@ -332,6 +332,14 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             ->setLocale($this->getStringValue('auth0_locale'))
             ->setSignature($this->getStringValue('auth0_signature'))
             ->setPosition($this->getStringValue('auth0_position'));
+
+        if ('' === $mauticUser->getFirstName()) {
+            $mauticUser->setFirstName('Auth0 First Name');
+        }
+
+        if ('' === $mauticUser->getLastName()) {
+            $mauticUser->setLastName('Auth0 Last Name');
+        }
 
         $auth0Role = $this->setValueFromAuth0User('auth0_role');
         if (is_array($auth0Role)) {

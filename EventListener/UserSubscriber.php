@@ -27,10 +27,7 @@ class UserSubscriber implements EventSubscriberInterface
         ];
     }
 
-    /**
-     * @return void
-     */
-    public function onUserAuthentication(AuthenticationEvent $event)
+    public function onUserAuthentication(AuthenticationEvent $event): void
     {
         $authenticatingService = $event->getAuthenticatingService();
 
@@ -50,8 +47,6 @@ class UserSubscriber implements EventSubscriberInterface
                 $event->setIsAuthenticated($authenticatingService, $result, $integration->shouldAutoCreateNewUser());
             } elseif ($result instanceof Response) {
                 $event->setResponse($result);
-                echo $result->getContent();
-                exit;
             }
         }
     }
