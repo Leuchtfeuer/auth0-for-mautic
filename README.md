@@ -23,11 +23,12 @@ There is also the possibility to add this package directly into your project com
 
 We are currently supporting following Mautic versions:<br><br>
 
-| Bundle Version | Mautic v5 Support | Mautic v4 Support | Mautic v3 Support | Mautic v2 Support |
-|:--------------:|:-----------------:|:-----------------:|:-----------------:|:-----------------:|
-|     2.0.x      |         x         |         -         |         -         |         -         |
-|     1.1.x      |         -         |         x         |         x         |         -         |
-|     1.0.x      |         -         |         -         |         x         |         x         |
+| Bundle Version | Mautic v6 Support | Mautic v5 Support | Mautic v4 Support | Mautic v3 Support | Mautic v2 Support |
+|:--------------:|:-----------------:|:-----------------:|:-----------------:|:-----------------:|:-----------------:|
+|     3.0.x      |         x         |         -         |         -         |         -         |         -         |
+|     2.0.x      |         -         |         x         |         -         |         -         |         -         |
+|     1.1.x      |         -         |         -         |         x         |         -         |         -         |
+|     1.0.x      |         -         |         -         |         -         |         x         |         x         |
 
 ### Plugin Configuration
 <table>
@@ -125,6 +126,9 @@ When updating the plugin, please make sure to change the callback URL from `../s
 
 ## Update from Mautic 4.x.x to Mautic 5.x.x
 When updating the plugin, please make sure to change the callback URL from `../s/sso_login/Auth0` to `../s/sso_login/LeuchtfeuerAuth0` in your Auth0 application settings.
+
+## Update from Mautic 5.x.x to Mautic 6.x.x
+When updating the plugin, please make sure to change the callback URL from `../s/sso_login/LeuchtfeuerAuth0` to `../s/sso_login_check/LeuchtfeuerAuth0` in your Auth0 application settings.
 
 ### Author
 Leuchtfeuer Digital Marketing GmbH

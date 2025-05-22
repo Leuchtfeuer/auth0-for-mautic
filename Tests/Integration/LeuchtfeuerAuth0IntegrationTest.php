@@ -207,23 +207,23 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
             ],
             'created_at'    => '2018-08-08T08:09:07.143Z',
             'user_metadata' => [
-                    'admin'      => true,
-                    'foo'        => 'bar',
-                    'login_name' => 'the.login',
-                    'name'       => 'First2 Last2, Company name',
-                ],
+                'admin'      => true,
+                'foo'        => 'bar',
+                'login_name' => 'the.login',
+                'name'       => 'First2 Last2, Company name',
+            ],
             'idp_tenant_domain' => 'tenant.com',
             'app_metadata'      => [
-                    'is_signup' => true,
-                    'roles'     => [
-                            0 => 'admin',
-                        ],
-
-                    'authorization' => [
-                            'groups' => [
-                                ],
-                        ],
+                'is_signup' => true,
+                'roles'     => [
+                    0 => 'admin',
                 ],
+
+                'authorization' => [
+                    'groups' => [
+                    ],
+                ],
+            ],
             'last_ip'      => '127.0.3.16',
             'last_login'   => '2024-01-29T15:50:43.556Z',
             'logins_count' => 147,

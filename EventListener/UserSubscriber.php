@@ -13,11 +13,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class UserSubscriber implements EventSubscriberInterface
 {
-    protected CoreParametersHelper $coreParametersHelper;
-
-    public function __construct(CoreParametersHelper $coreParametersHelper)
+    public function __construct(protected CoreParametersHelper $coreParametersHelper)
     {
-        $this->coreParametersHelper = $coreParametersHelper;
     }
 
     /**
@@ -32,7 +29,6 @@ class UserSubscriber implements EventSubscriberInterface
 
     public function onUserAuthentication(AuthenticationEvent $event): void
     {
-        $result                = false;
         $authenticatingService = $event->getAuthenticatingService();
 
         if (LeuchtfeuerAuth0Integration::NAME === $authenticatingService) {
@@ -44,6 +40,7 @@ class UserSubscriber implements EventSubscriberInterface
 
             $integration->setCoreParametersHelper($this->coreParametersHelper);
             $integration->setUserProvider($event->getUserProvider());
+
             $result = $this->authenticateService($integration, $event->isLoginCheck());
 
             if ($result instanceof User) {
@@ -54,10 +51,7 @@ class UserSubscriber implements EventSubscriberInterface
         }
     }
 
-    /**
-     * @return bool|RedirectResponse|User
-     */
-    private function authenticateService(LeuchtfeuerAuth0Integration $integration, bool $loginCheck)
+    private function authenticateService(LeuchtfeuerAuth0Integration $integration, bool $loginCheck): RedirectResponse|bool|User
     {
         if ($loginCheck) {
             /** @var false|User $authenticatedUser */
@@ -67,9 +61,8 @@ class UserSubscriber implements EventSubscriberInterface
             }
         } else {
             $loginUrl = $integration->getAuthLoginUrl();
-            $response = new RedirectResponse($loginUrl);
 
-            return $response;
+            return new RedirectResponse($loginUrl);
         }
 
         return false;

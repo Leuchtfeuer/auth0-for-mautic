@@ -48,7 +48,11 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 
     public function getAuthenticationUrl(): string
     {
-        return 'https://'.$this->keys['domain'].'/authorize';
+        if (isset($this->keys['domain']) && is_string($this->keys['domain'])) {
+            return 'https://'.$this->keys['domain'].'/authorize';
+        }
+
+        return '';
     }
 
     public function getAuthScope(): string
@@ -58,7 +62,11 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 
     public function getAccessTokenUrl(): string
     {
-        return 'https://'.$this->keys['domain'].'/oauth/token';
+        if (isset($this->keys['domain']) && is_string($this->keys['domain'])) {
+            return 'https://'.$this->keys['domain'].'/oauth/token';
+        }
+
+        return '';
     }
 
     public function shouldAutoCreateNewUser(): bool
@@ -107,6 +115,9 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
      */
     public function getUser($response): bool|User
     {
+        if (!isset($this->keys['domain']) || !is_string($this->keys['domain'])) {
+            throw new \RuntimeException('The domain key must be set.');
+        }
         $this->setClient('https://'.rtrim($this->keys['domain'], '/').'/');
 
         if (!is_array($response)) {
@@ -119,6 +130,10 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 
             if (!array_key_exists('token_type', $managementToken) || !array_key_exists('access_token', $managementToken)) {
                 throw new AuthenticationServiceException('Management token');
+            }
+
+            if (!is_string($userInfo['sub'])) {
+                return false;
             }
 
             $auth0User = $this->getAuth0User($userInfo['sub'], $managementToken);
@@ -171,6 +186,14 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
      */
     protected function getUserInfo(array $token): array
     {
+        if (!array_key_exists('token_type', $token) || !array_key_exists('access_token', $token)) {
+            throw new AuthenticationServiceException('Token');
+        }
+
+        if (!is_string($token['token_type']) || !is_string($token['access_token'])) {
+            throw new \RuntimeException('The token must be a string.');
+        }
+
         $response = $this->client->request(
             'GET',
             'userinfo',
@@ -198,6 +221,14 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
      */
     protected function getManagementToken(): array
     {
+        if (!array_key_exists('audience', $this->keys) || !array_key_exists('domain', $this->keys)) {
+            throw new AuthenticationServiceException('Token');
+        }
+
+        if (!is_string($this->keys['audience']) || !is_string($this->keys['domain'])) {
+            throw new \RuntimeException('The token must be a string.');
+        }
+
         $response = $this->client->request(
             'POST',
             'oauth/token',
@@ -230,6 +261,22 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
      */
     protected function getAuth0User(string $userId, array $managementToken): array
     {
+        if (
+            !array_key_exists('audience', $this->keys)
+            || !array_key_exists('token_type', $managementToken)
+            || !array_key_exists('access_token', $managementToken)
+        ) {
+            throw new AuthenticationServiceException('Token');
+        }
+
+        if (
+            !is_string($this->keys['audience'])
+            || !is_string($managementToken['token_type'])
+            || !is_string($managementToken['access_token'])
+        ) {
+            throw new \RuntimeException('The token must be a string.');
+        }
+
         $response = $this->client->request(
             'GET',
             trim($this->keys['audience'], '/').'/users/'.$userId,
@@ -285,6 +332,14 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             ->setLocale($this->getStringValue('auth0_locale'))
             ->setSignature($this->getStringValue('auth0_signature'))
             ->setPosition($this->getStringValue('auth0_position'));
+
+        if ('' === $mauticUser->getFirstName()) {
+            $mauticUser->setFirstName('Auth0 First Name');
+        }
+
+        if ('' === $mauticUser->getLastName()) {
+            $mauticUser->setLastName('Auth0 Last Name');
+        }
 
         $auth0Role = $this->setValueFromAuth0User('auth0_role');
         if (is_array($auth0Role)) {
