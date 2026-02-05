@@ -3,7 +3,7 @@
 return [
     'name'        => 'Auth0 Integration by Leuchtfeuer',
     'description' => 'Enables Auth0 login for users.',
-    'version'     => '2.0.0',
+    'version'     => '5.0.0',
     'author'      => 'Leuchtfeuer Digital Marketing GmbH',
     'parameters'  => [
         'auth0_username'  => 'email',
