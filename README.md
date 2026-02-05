@@ -1,35 +1,28 @@
 # Auth0 Integration by Leuchtfeuer
-![Auth0Mautic](https://www.leuchtfeuer.com/fileadmin/github/auth0-for-mautic/Mautic-Auth0.png "Auth0 for Mautic")
-
-
-[![Latest Stable Version](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/v/stable)](https://packagist.org/packages/leuchtfeuer/mautic-auth0-bundle)
-[![Build Status](https://github.com/Leuchtfeuer/auth0-for-mautic/workflows/Continous%20Integration/badge.svg)](https://github.com/Leuchtfeuer/auth0-for-mautic/actions)
-[![Total Downloads](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/downloads)](https://packagist.org/leuchtfeuer/mautic-auth0-bundle)
-[![Latest Unstable Version](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/v/unstable)](https://packagist.org/leuchtfeuer/mautic-auth0-bundle)
-[![Code Climate](https://codeclimate.com/github/Leuchtfeuer/auth0-for-mautic/badges/gpa.svg)](https://codeclimate.com/github/Leuchtfeuer/auth0-for-mautic)
-[![License](https://poser.pugx.org/leuchtfeuer/mautic-auth0-bundle/license)](https://packagist.org/packages/leuchtfeuer/mautic-auth0-bundle)
 
 This Mautic plugin allows logins and sign ups via Auth0.
 
+
+## Requirements for this release
+> [!TIP]
+> Other releases of this plugin may cover different Mautic versions!
+- Mautic 5
+- PHP 8.0 or higher
 ## Installation
-1. Open a Terminal / Console window
-2. Change directory to the mautic root (i.e. `cd /var/www/mautic`)
-3. Clone this repository into plugins/LeuchtfeuerAuth0Bundle (`git clone https://github.com/Leuchtfeuer/auth0-for-mautic.git plugins/LeuchtfeuerAuth0Bundle`)
-4. Clear the cache (`php bin/console cache:clear`)
-5. Go to Settings -> Plugins and click on "Install/Upgrade Plugins"
-6. Choose the Auth0 Plugin, adapt the configuration and publish it
+### Composer
+This plugin can be installed through composer.
+### Manual Installation
+Alternatively, it can be installed manually, following the usual steps:
+- Download the plugin
+- Unzip to the Mautic `plugins` directory
+- Rename folder to `LeuchtfeuerAuth0Bundle`
+- In the Mautic backend, go to the `Plugins` page as an administrator
+- Click on the `Install/Upgrade Plugins` button to install the Plugin.
+OR
+- If you have shell access, execute `php bin\console cache:clear` and `php bin\console mautic:plugins:reload` to install the plugins.
+Don't forget to activate the plugin in the plugin settings.
 
-There is also the possibility to add this package directly into your project composer.json file by executing following command: `composer require leuchtfeuer/mautic-auth0-bundle`.
-
-We are currently supporting following Mautic versions:<br><br>
-
-| Bundle Version | Mautic v5 Support | Mautic v4 Support | Mautic v3 Support | Mautic v2 Support |
-|:--------------:|:-----------------:|:-----------------:|:-----------------:|:-----------------:|
-|     2.0.x      |         x         |         -         |         -         |         -         |
-|     1.1.x      |         -         |         x         |         x         |         -         |
-|     1.0.x      |         -         |         -         |         x         |         x         |
-
-### Plugin Configuration
+## Configuration
 <table>
     <tr>
         <th>Configuration</th>
@@ -53,7 +46,7 @@ We are currently supporting following Mautic versions:<br><br>
     </tr>
 </table>
 
-## Configuration
+### Auth0 Configuration
 You can configure the mapping (Auth0 data -> Mautic User data) in the configuration module. There are several options:
 
 <table>
@@ -126,7 +119,29 @@ When updating the plugin, please make sure to change the callback URL from `../s
 ## Update from Mautic 4.x.x to Mautic 5.x.x
 When updating the plugin, please make sure to change the callback URL from `../s/sso_login/Auth0` to `../s/sso_login/LeuchtfeuerAuth0` in your Auth0 application settings.
 
-### Author
-Leuchtfeuer Digital Marketing GmbH
+## Known Issues
 
-mautic@Leuchtfeuer.com
+## Troubleshooting
+Make sure you have not only installed but also enabled the Plugin.
+If things are still funny, please try
+`php bin/console cache:clear`
+
+
+## Change log
+- https://github.com/Leuchtfeuer/auth0-for-mautic/releases
+## Future Ideas
+---Mention any planned updates, features, or ideas for future development.---
+## Sponsoring & Commercial Support
+We are continuously improving our plugins. If you are requiring priority support or custom features, please contact us at mautic-plugins@leuchtfeuer.com.
+## Get Involved
+Feel free to open issues or submit pull requests on [GitHub](#). Follow the contribution guidelines in `CONTRIBUTING.md`.”
+## Credits
+
+## Author
+Leuchtfeuer Digital Marketing GmbH
+Please raise any issues in GitHub.
+For all other things, please email mautic-plugins@Leuchtfeuer.com
+## License
+“This plugin is licensed under the MIT License. See the `LICENSE` file for more details.”
+## Resources / Further Readings
+
