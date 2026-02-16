@@ -49,7 +49,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     public function getAuthenticationUrl(): string
     {
         if (isset($this->keys['domain']) && is_string($this->keys['domain'])) {
-            return 'https://'.$this->keys['domain'].'/authorize';
+            return 'https://'.$this->normalizeDomain($this->keys['domain']).'/authorize';
         }
 
         return '';
@@ -63,15 +63,10 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     public function getAccessTokenUrl(): string
     {
         if (isset($this->keys['domain']) && is_string($this->keys['domain'])) {
-            return 'https://'.$this->keys['domain'].'/oauth/token';
+            return 'https://'.$this->normalizeDomain($this->keys['domain']).'/oauth/token';
         }
 
         return '';
-    }
-
-    public function shouldAutoCreateNewUser(): bool
-    {
-        return true;
     }
 
     /**
@@ -118,7 +113,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         if (!isset($this->keys['domain']) || !is_string($this->keys['domain'])) {
             throw new \RuntimeException('The domain key must be set.');
         }
-        $this->setClient('https://'.rtrim($this->keys['domain'], '/').'/');
+        $this->setClient('https://'.rtrim($this->normalizeDomain($this->keys['domain']), '/').'/');
 
         if (!is_array($response)) {
             throw new \RuntimeException('The response for getUser must be an array.');
@@ -208,7 +203,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         $apiResponse = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
 
         if (!is_array($apiResponse)) {
-            throw new \RuntimeException('The api response must be an array. '.print_r($response, true));
+            throw new \RuntimeException('The api response must be an array.');
         }
 
         return $apiResponse;
@@ -237,7 +232,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
                     'grant_type'    => 'client_credentials',
                     'client_id'     => $this->keys['client_id'],
                     'client_secret' => $this->keys['client_secret'],
-                    'audience'      => 'https://'.rtrim($this->keys['domain'], '/').'/'.trim($this->keys['audience'], '/').'/',
+                    'audience'      => 'https://'.rtrim($this->normalizeDomain($this->keys['domain']), '/').'/'.trim($this->keys['audience'], '/').'/',
                 ],
                 'http_errors' => false,
             ]
@@ -246,7 +241,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         $apiResponse = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
 
         if (!is_array($apiResponse)) {
-            throw new \RuntimeException('The api response must be an array. '.print_r($response, true));
+            throw new \RuntimeException('The api response must be an array.');
         }
 
         return $apiResponse;
@@ -291,7 +286,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         $apiResponse = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
 
         if (!is_array($apiResponse)) {
-            throw new \RuntimeException('The api response must be an array. '.print_r($response, true));
+            throw new \RuntimeException('The api response must be an array.');
         }
 
         return $apiResponse;
@@ -406,5 +401,46 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             'client_id'     => 'plugin.auth0.integration.keyfield.client_id',
             'client_secret' => 'plugin.auth0.integration.keyfield.client_secret',
         ];
+    }
+
+    /**
+     * Validates and normalizes the domain before saving API keys.
+     *
+     * @param array<string, mixed> $keys
+     *
+     * @throws \RuntimeException
+     */
+    public function encryptAndSetApiKeys(array $keys, \Mautic\PluginBundle\Entity\Integration $entity): void
+    {
+        // Validate and normalize domain before saving
+        if (isset($keys['domain']) && is_string($keys['domain'])) {
+            $keys['domain'] = $this->normalizeDomain($keys['domain']);
+        }
+
+        parent::encryptAndSetApiKeys($keys, $entity);
+    }
+
+    /**
+     * Normalizes the domain by removing the protocol and anything before the host.
+     * This prevents URLs like https://https://domain.com when users enter full URLs.
+     * Validates that a valid host exists in the domain string.
+     */
+    private function normalizeDomain(string $domain): string
+    {
+        $domain = trim($domain);
+
+        $urlToParse = str_contains($domain, '://') ? $domain : 'https://'.$domain;
+        $parsed     = parse_url($urlToParse);
+
+        if (!isset($parsed['host']) || empty($parsed['host'])) {
+            throw new \RuntimeException('Invalid domain: Could not extract host from "'.$domain.'"');
+        }
+
+        $hostPosition = strpos($domain, $parsed['host']);
+        if (false !== $hostPosition) {
+            return substr($domain, $hostPosition);
+        }
+
+        return $domain;
     }
 }
