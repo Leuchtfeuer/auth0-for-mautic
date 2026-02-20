@@ -13,7 +13,10 @@ jobs:
     strategy:
       matrix:
         php-version: [8.1, 8.2, 8.3]
-        mautic-version: ['5.0', '6.0', '7.0']
+        mautic-version: ['5.2', '6.0', '7.0']
+        exclude:
+          - php-version: 8.1
+            mautic-version: '7.0'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
