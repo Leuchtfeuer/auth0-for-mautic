@@ -93,7 +93,7 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
         self::assertSame($apiUserRole, $user->getRole());
     }
 
-    public function testGetUserErrorRole(): void
+    public function testGetUserWithoutAuth0RoleUsesDefaultRole(): void
     {
         $newUserRole     = $this->createMock(Role::class);
         $newUserRoleName = '101101';
@@ -254,9 +254,9 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
         // Mock HTTP Client with updated Auth0 data
         // ========================================
         $this->getClient($integration, $accessSettings, $token, [
-            'given_name'  => 'UpdatedFirst',
-            'family_name' => 'UpdatedLast',
-            'locale'      => 'de',
+            'given_name'   => 'UpdatedFirst',
+            'family_name'  => 'UpdatedLast',
+            'locale'       => 'de',
             'app_metadata' => ['roles' => [$apiRoleId]],
         ]);
 
@@ -272,18 +272,59 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
         // ========================================
         self::assertInstanceOf(User::class, $user);
 
-        // Verify it's the SAME user instance (not a new one)
         self::assertSame($existingUser, $user, 'Should return the same User instance, not create a new one');
 
-        // Verify data was UPDATED with new Auth0 values
         self::assertSame('some@email.com', $user->getEmail());
         self::assertSame('some@email.com', $user->getUserIdentifier());
         self::assertSame('UpdatedFirst', $user->getFirstName(), 'First name should be updated from Auth0');
         self::assertSame('UpdatedLast', $user->getLastName(), 'Last name should be updated from Auth0');
         self::assertSame('de', $user->getLocale(), 'Locale should be updated from Auth0');
 
-        // Verify role was updated from Auth0 roles
         self::assertSame($apiUserRole, $user->getRole(), 'Role should be updated from Auth0 app_metadata.roles');
+    }
+
+    /**
+     * @dataProvider domainNormalizationProvider
+     */
+    public function testDomainNormalization(string $inputDomain, string $expectedDomain): void
+    {
+        $integration = $this->getMockBuilder(LeuchtfeuerAuth0Integration::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        // Access private normalizeDomain method via reflection
+        $reflectionClass  = new \ReflectionClass($integration);
+        $reflectionMethod = $reflectionClass->getMethod('normalizeDomain');
+        $reflectionMethod->setAccessible(true);
+
+        $result = $reflectionMethod->invoke($integration, $inputDomain);
+
+        self::assertSame($expectedDomain, $result);
+    }
+
+    public function testGetUserThrowsExceptionWhenDomainMissing(): void
+    {
+        // ========================================
+        // Setup: Integration with NO domain
+        // ========================================
+        $integration = $this->getMockBuilder(LeuchtfeuerAuth0Integration::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getDecryptedApiKeys'])
+            ->getMock();
+
+        // Return empty keys (no domain)
+        $integration->method('getDecryptedApiKeys')
+            ->willReturn([]);
+
+        $token = ['token_type' => 'Bearer', 'access_token' => 'test_token'];
+
+        // ========================================
+        // ACT & ASSERT: Expect RuntimeException
+        // ========================================
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('The domain key must be set.');
+
+        $integration->getUser($token);
     }
 
     /**
@@ -416,5 +457,20 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
         $reflectionProperty->setValue($integration, $client);
 
         return $client;
+    }
+
+    /**
+     * @return array<string, array<string>>
+     */
+    public static function domainNormalizationProvider(): array
+    {
+        return [
+            'with https://'           => ['https://tenant.auth0.com', 'tenant.auth0.com'],
+            'with http://'            => ['http://tenant.auth0.com', 'tenant.auth0.com'],
+            'with trailing slash'     => ['tenant.auth0.com/', 'tenant.auth0.com'],
+            'with protocol and slash' => ['https://tenant.auth0.com/', 'tenant.auth0.com'],
+            'with spaces'             => ['  tenant.auth0.com  ', 'tenant.auth0.com'],
+            'already clean'           => ['tenant.auth0.com', 'tenant.auth0.com'],
+        ];
     }
 }

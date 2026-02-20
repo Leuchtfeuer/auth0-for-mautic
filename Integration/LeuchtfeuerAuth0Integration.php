@@ -20,7 +20,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     protected ClientInterface $client;
 
     /**
-     * @var array<string, string|int|bool|array<string|int|bool>>
+     * @var array<string, mixed>
      */
     protected array $auth0User = [];
 
@@ -49,7 +49,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     public function getAuthenticationUrl(): string
     {
         if (isset($this->keys['domain']) && is_string($this->keys['domain'])) {
-            return 'https://'.$this->normalizeDomain($this->keys['domain']).'/authorize';
+            return 'https://'.$this->keys['domain'].'/authorize';
         }
 
         return '';
@@ -63,7 +63,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     public function getAccessTokenUrl(): string
     {
         if (isset($this->keys['domain']) && is_string($this->keys['domain'])) {
-            return 'https://'.$this->normalizeDomain($this->keys['domain']).'/oauth/token';
+            return 'https://'.$this->keys['domain'].'/oauth/token';
         }
 
         return '';
@@ -113,7 +113,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         if (!isset($this->keys['domain']) || !is_string($this->keys['domain'])) {
             throw new \RuntimeException('The domain key must be set.');
         }
-        $this->setClient('https://'.rtrim($this->normalizeDomain($this->keys['domain']), '/').'/');
+        $this->setClient('https://'.rtrim($this->keys['domain'], '/').'/');
 
         if (!is_array($response)) {
             throw new \RuntimeException('The response for getUser must be an array.');
@@ -147,18 +147,19 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     }
 
     /**
-     * @param array<array<bool|int|string>|bool|int|string> $data
-     * @param array<string>                                 $keys
-     *
-     * @return string|int|bool|array<string|int|bool>
+     * @param array<string, mixed> $data
+     * @param array<string>        $keys
      */
-    protected function getAuth0ValueRecursive(array $data, array $keys): array|bool|int|string
+    protected function getAuth0ValueRecursive(array $data, array $keys): mixed
     {
         $actualKey = array_shift($keys);
 
         if (isset($data[$actualKey])) {
             if (is_array($data[$actualKey]) && count($keys) > 0) {
-                return $this->getAuth0ValueRecursive($data[$actualKey], $keys);
+                /** @var array<string, mixed> $nestedData */
+                $nestedData = $data[$actualKey];
+
+                return $this->getAuth0ValueRecursive($nestedData, $keys);
             }
 
             return $data[$actualKey];
@@ -175,7 +176,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     /**
      * @param array<mixed> $token
      *
-     * @return array<string, string>
+     * @return array<string, mixed>
      *
      * @throws GuzzleException
      */
@@ -206,6 +207,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             throw new \RuntimeException('The api response must be an array.');
         }
 
+        /** @var array<string, mixed> $apiResponse */
         return $apiResponse;
     }
 
@@ -232,7 +234,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
                     'grant_type'    => 'client_credentials',
                     'client_id'     => $this->keys['client_id'],
                     'client_secret' => $this->keys['client_secret'],
-                    'audience'      => 'https://'.rtrim($this->normalizeDomain($this->keys['domain']), '/').'/'.trim($this->keys['audience'], '/').'/',
+                    'audience'      => 'https://'.rtrim($this->keys['domain'], '/').'/'.trim($this->keys['audience'], '/').'/',
                 ],
                 'http_errors' => false,
             ]
@@ -250,7 +252,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     /**
      * @param array<mixed> $managementToken
      *
-     * @return array<string, string>
+     * @return array<string, mixed>
      *
      * @throws GuzzleException
      */
@@ -289,6 +291,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             throw new \RuntimeException('The api response must be an array.');
         }
 
+        /** @var array<string, mixed> $apiResponse */
         return $apiResponse;
     }
 
@@ -351,10 +354,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         return $mauticUser;
     }
 
-    /**
-     * @return string|bool|int|array<string|bool|int>
-     */
-    protected function setValueFromAuth0User(string $configurationParameter, string $fallback = ''): array|bool|int|string
+    protected function setValueFromAuth0User(string $configurationParameter, string $fallback = ''): mixed
     {
         $configParameter = $this->coreParametersHelper->get($configurationParameter);
 
@@ -404,15 +404,10 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     }
 
     /**
-     * Validates and normalizes the domain before saving API keys.
-     *
      * @param array<string, mixed> $keys
-     *
-     * @throws \RuntimeException
      */
     public function encryptAndSetApiKeys(array $keys, \Mautic\PluginBundle\Entity\Integration $entity): void
     {
-        // Validate and normalize domain before saving
         if (isset($keys['domain']) && is_string($keys['domain'])) {
             $keys['domain'] = $this->normalizeDomain($keys['domain']);
         }
@@ -420,26 +415,19 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         parent::encryptAndSetApiKeys($keys, $entity);
     }
 
-    /**
-     * Normalizes the domain by removing the protocol and anything before the host.
-     * This prevents URLs like https://https://domain.com when users enter full URLs.
-     * Validates that a valid host exists in the domain string.
-     */
     private function normalizeDomain(string $domain): string
     {
         $domain = trim($domain);
 
-        $urlToParse = str_contains($domain, '://') ? $domain : 'https://'.$domain;
-        $parsed     = parse_url($urlToParse);
+        // Remove protocol if present
+        $domain = preg_replace('#^https?://#i', '', $domain);
 
-        if (!isset($parsed['host']) || empty($parsed['host'])) {
-            throw new \RuntimeException('Invalid domain: Could not extract host from "'.$domain.'"');
+        if (null === $domain) {
+            throw new \RuntimeException('Failed to normalize domain.');
         }
 
-        $hostPosition = strpos($domain, $parsed['host']);
-        if (false !== $hostPosition) {
-            return substr($domain, $hostPosition);
-        }
+        // Remove trailing slashes
+        $domain = rtrim($domain, '/');
 
         return $domain;
     }
