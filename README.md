@@ -6,7 +6,8 @@ This Mautic plugin allows logins and sign ups via Auth0.
 ## Requirements for this release
 > [!TIP]
 > Other releases of this plugin may cover different Mautic versions!
-- Mautic 6
+- Mautic 5, 6 or 7
+- PHP 8.1 or higher
 
 ## Installation
 ### Composer
