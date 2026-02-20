@@ -404,7 +404,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     }
 
     /**
-     * @param array<string, mixed> $keys
+     * @phpstan-ignore missingType.iterableValue (inherited from parent class)
      */
     public function encryptAndSetApiKeys(array $keys, \Mautic\PluginBundle\Entity\Integration $entity): void
     {
