@@ -25,7 +25,7 @@ jobs:
         with:
           php-version: ${{ matrix.php-version }}
       - name: Install composer requirements.
-        run: composer require mautic/core-lib:^${{ matrix.mautic-version }} --dev --no-update && composer install
+        run: composer require mautic/core-lib:^${{ matrix.mautic-version }} --no-update && composer install
       - name: Check PHP CS
         run: ./vendor/bin/php-cs-fixer fix --config .php-cs-fixer.php --dry-run --using-cache no --show-progress dots -v
       - name: Run PHPStan
