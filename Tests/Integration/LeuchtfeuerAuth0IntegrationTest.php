@@ -93,7 +93,7 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
         self::assertSame($apiUserRole, $user->getRole());
     }
 
-    public function testGetUserErrorRole(): void
+    public function testGetUserWithoutAuth0RoleUsesDefaultRole(): void
     {
         $newUserRole     = $this->createMock(Role::class);
         $newUserRoleName = '101101';
@@ -155,6 +155,176 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
         self::assertSame('', $user->getSignature());
         self::assertSame('', $user->getPosition());
         self::assertSame($newUserRole, $user->getRole());
+    }
+
+    public function testExistingUserIsUpdatedNotDuplicated(): void
+    {
+        $newUserRole     = $this->createMock(Role::class);
+        $apiUserRole     = $this->createMock(Role::class);
+        $newUserRoleName = '101101';
+        $apiRoleId       = '176254252246';
+        $accessSettings  = ['domain' => 'dom.ain', 'client_secret' => 'Secret!', 'client_id' => 'client id!', 'audience' => 'The audience'];
+        $token           = ['token_type' => 'type', 'access_token' => 'access'];
+
+        // ========================================
+        // Setup: Create existing user
+        // ========================================
+        $existingUser = new User();
+        $existingUser->setEmail('some@email.com');
+        $existingUser->setUsername('some@email.com');
+        $existingUser->setFirstName('OldFirstName');
+        $existingUser->setLastName('OldLastName');
+        $existingUser->setLocale('en');
+        $existingUser->setRole($newUserRole);
+
+        // ========================================
+        // Mock Integration
+        // ========================================
+        $integration = $this->getMockBuilder(LeuchtfeuerAuth0Integration::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['setClient', 'getDecryptedApiKeys'])
+            ->getMock();
+
+        $integration->method('getDecryptedApiKeys')
+            ->willReturn($accessSettings);
+
+        // ========================================
+        // Mock CoreParametersHelper
+        // ========================================
+        $coreParametersHelper = $this->createMock(CoreParametersHelper::class);
+        $coreParametersHelper->method('get')
+            ->willReturnMap([
+                ['auth0_username', null, 'email'],
+                ['auth0_email', null, 'email'],
+                ['auth0_firstName', null, 'given_name'],
+                ['auth0_lastName', null, 'family_name'],
+                ['auth0_timezone', null, null],
+                ['auth0_locale', null, 'locale'],
+                ['auth0_signature', null, ''],
+                ['auth0_position', null, ''],
+                ['auth0_role', null, 'app_metadata.roles'],
+            ]);
+
+        // ========================================
+        // Mock UserProvider - returns existing user
+        // ========================================
+        $userProvider = $this->createMock(\Mautic\UserBundle\Security\Provider\UserProvider::class);
+        $userProvider->expects(self::once())
+            ->method('loadUserByIdentifier')
+            ->with('some@email.com')
+            ->willReturn($existingUser);
+
+        // Inject UserProvider into integration
+        $reflectionObject   = new \ReflectionObject($integration);
+        $reflectionProperty = $reflectionObject->getProperty('userProvider');
+        $reflectionProperty->setAccessible(true);
+        $reflectionProperty->setValue($integration, $userProvider);
+
+        // ========================================
+        // Mock EntityManager & RoleRepository
+        // ========================================
+        $roleRepository = $this->createMock(RoleRepository::class);
+        $roleRepository->expects(self::once())
+            ->method('find')
+            ->with($apiRoleId)
+            ->willReturn($apiUserRole);
+
+        $em = $this->createMock(EntityManager::class);
+        $em->expects(self::once())
+            ->method('getReference')
+            ->with(Role::class, $newUserRoleName)
+            ->willReturn($newUserRole);
+        $em->expects(self::once())
+            ->method('getRepository')
+            ->with(Role::class)
+            ->willReturn($roleRepository);
+
+        $reflectionProperty = $reflectionObject->getProperty('em');
+        $reflectionProperty->setAccessible(true);
+        $reflectionProperty->setValue($integration, $em);
+
+        // ========================================
+        // Mock Integration Settings
+        // ========================================
+        $settings = $this->createMock(Integration::class);
+        $settings->method('getFeatureSettings')
+            ->willReturn(['new_user_role' => $newUserRoleName]);
+
+        // ========================================
+        // Mock HTTP Client with updated Auth0 data
+        // ========================================
+        $this->getClient($integration, $accessSettings, $token, [
+            'given_name'   => 'UpdatedFirst',
+            'family_name'  => 'UpdatedLast',
+            'locale'       => 'de',
+            'app_metadata' => ['roles' => [$apiRoleId]],
+        ]);
+
+        // ========================================
+        // ACT: Call getUser()
+        // ========================================
+        $integration->setIntegrationSettings($settings);
+        $integration->setCoreParametersHelper($coreParametersHelper);
+        $user = $integration->getUser($token);
+
+        // ========================================
+        // ASSERT: Verify user was UPDATED
+        // ========================================
+        self::assertInstanceOf(User::class, $user);
+
+        self::assertSame($existingUser, $user, 'Should return the same User instance, not create a new one');
+
+        self::assertSame('some@email.com', $user->getEmail());
+        self::assertSame('some@email.com', $user->getUserIdentifier());
+        self::assertSame('UpdatedFirst', $user->getFirstName(), 'First name should be updated from Auth0');
+        self::assertSame('UpdatedLast', $user->getLastName(), 'Last name should be updated from Auth0');
+        self::assertSame('de', $user->getLocale(), 'Locale should be updated from Auth0');
+
+        self::assertSame($apiUserRole, $user->getRole(), 'Role should be updated from Auth0 app_metadata.roles');
+    }
+
+    /**
+     * @dataProvider domainNormalizationProvider
+     */
+    public function testDomainNormalization(string $inputDomain, string $expectedDomain): void
+    {
+        $integration = $this->getMockBuilder(LeuchtfeuerAuth0Integration::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        // Access private normalizeDomain method via reflection
+        $reflectionClass  = new \ReflectionClass($integration);
+        $reflectionMethod = $reflectionClass->getMethod('normalizeDomain');
+        $reflectionMethod->setAccessible(true);
+
+        $result = $reflectionMethod->invoke($integration, $inputDomain);
+
+        self::assertSame($expectedDomain, $result);
+    }
+
+    public function testGetUserThrowsExceptionWhenDomainMissing(): void
+    {
+        // ========================================
+        // Setup: Integration with NO domain
+        // ========================================
+        $integration = $this->getMockBuilder(LeuchtfeuerAuth0Integration::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getDecryptedApiKeys'])
+            ->getMock();
+
+        // Return empty keys (no domain)
+        $integration->method('getDecryptedApiKeys')
+            ->willReturn([]);
+
+        $token = ['token_type' => 'Bearer', 'access_token' => 'test_token'];
+
+        // ========================================
+        // ACT & ASSERT: Expect RuntimeException
+        // ========================================
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('The domain key must be set.');
+
+        $integration->getUser($token);
     }
 
     /**
@@ -287,5 +457,20 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
         $reflectionProperty->setValue($integration, $client);
 
         return $client;
+    }
+
+    /**
+     * @return array<string, array<string>>
+     */
+    public static function domainNormalizationProvider(): array
+    {
+        return [
+            'with https://'           => ['https://tenant.auth0.com', 'tenant.auth0.com'],
+            'with http://'            => ['http://tenant.auth0.com', 'tenant.auth0.com'],
+            'with trailing slash'     => ['tenant.auth0.com/', 'tenant.auth0.com'],
+            'with protocol and slash' => ['https://tenant.auth0.com/', 'tenant.auth0.com'],
+            'with spaces'             => ['  tenant.auth0.com  ', 'tenant.auth0.com'],
+            'already clean'           => ['tenant.auth0.com', 'tenant.auth0.com'],
+        ];
     }
 }

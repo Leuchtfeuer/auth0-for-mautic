@@ -20,7 +20,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     protected ClientInterface $client;
 
     /**
-     * @var array<string, string|int|bool|array<string|int|bool>>
+     * @var array<string, mixed>
      */
     protected array $auth0User = [];
 
@@ -67,11 +67,6 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         }
 
         return '';
-    }
-
-    public function shouldAutoCreateNewUser(): bool
-    {
-        return true;
     }
 
     /**
@@ -152,18 +147,19 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     }
 
     /**
-     * @param array<array<bool|int|string>|bool|int|string> $data
-     * @param array<string>                                 $keys
-     *
-     * @return string|int|bool|array<string|int|bool>
+     * @param array<string, mixed> $data
+     * @param array<string>        $keys
      */
-    protected function getAuth0ValueRecursive(array $data, array $keys): array|bool|int|string
+    protected function getAuth0ValueRecursive(array $data, array $keys): mixed
     {
         $actualKey = array_shift($keys);
 
         if (isset($data[$actualKey])) {
             if (is_array($data[$actualKey]) && count($keys) > 0) {
-                return $this->getAuth0ValueRecursive($data[$actualKey], $keys);
+                /** @var array<string, mixed> $nestedData */
+                $nestedData = $data[$actualKey];
+
+                return $this->getAuth0ValueRecursive($nestedData, $keys);
             }
 
             return $data[$actualKey];
@@ -180,7 +176,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     /**
      * @param array<mixed> $token
      *
-     * @return array<string, string>
+     * @return array<string, mixed>
      *
      * @throws GuzzleException
      */
@@ -208,9 +204,10 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         $apiResponse = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
 
         if (!is_array($apiResponse)) {
-            throw new \RuntimeException('The api response must be an array. '.print_r($response, true));
+            throw new \RuntimeException('The api response must be an array.');
         }
 
+        /** @var array<string, mixed> $apiResponse */
         return $apiResponse;
     }
 
@@ -246,7 +243,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         $apiResponse = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
 
         if (!is_array($apiResponse)) {
-            throw new \RuntimeException('The api response must be an array. '.print_r($response, true));
+            throw new \RuntimeException('The api response must be an array.');
         }
 
         return $apiResponse;
@@ -255,7 +252,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     /**
      * @param array<mixed> $managementToken
      *
-     * @return array<string, string>
+     * @return array<string, mixed>
      *
      * @throws GuzzleException
      */
@@ -291,9 +288,10 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         $apiResponse = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
 
         if (!is_array($apiResponse)) {
-            throw new \RuntimeException('The api response must be an array. '.print_r($response, true));
+            throw new \RuntimeException('The api response must be an array.');
         }
 
+        /** @var array<string, mixed> $apiResponse */
         return $apiResponse;
     }
 
@@ -356,10 +354,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         return $mauticUser;
     }
 
-    /**
-     * @return string|bool|int|array<string|bool|int>
-     */
-    protected function setValueFromAuth0User(string $configurationParameter, string $fallback = ''): array|bool|int|string
+    protected function setValueFromAuth0User(string $configurationParameter, string $fallback = ''): mixed
     {
         $configParameter = $this->coreParametersHelper->get($configurationParameter);
 
@@ -406,5 +401,34 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             'client_id'     => 'plugin.auth0.integration.keyfield.client_id',
             'client_secret' => 'plugin.auth0.integration.keyfield.client_secret',
         ];
+    }
+
+    /**
+     * @phpstan-ignore missingType.iterableValue (inherited from parent class)
+     */
+    public function encryptAndSetApiKeys(array $keys, \Mautic\PluginBundle\Entity\Integration $entity): void
+    {
+        if (isset($keys['domain']) && is_string($keys['domain'])) {
+            $keys['domain'] = $this->normalizeDomain($keys['domain']);
+        }
+
+        parent::encryptAndSetApiKeys($keys, $entity);
+    }
+
+    private function normalizeDomain(string $domain): string
+    {
+        $domain = trim($domain);
+
+        // Remove protocol if present
+        $domain = preg_replace('#^https?://#i', '', $domain);
+
+        if (null === $domain) {
+            throw new \RuntimeException('Failed to normalize domain.');
+        }
+
+        // Remove trailing slashes
+        $domain = rtrim($domain, '/');
+
+        return $domain;
     }
 }

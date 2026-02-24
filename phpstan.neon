@@ -11,8 +11,4 @@ parameters:
         - .
     excludePaths:
         - vendor
-    ignoreErrors:
-        - message: '#^Constant MAUTIC_VERSION not found.$#'
-          path: Config/services.php
-          count: 1
 
