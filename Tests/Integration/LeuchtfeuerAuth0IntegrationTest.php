@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 
 class LeuchtfeuerAuth0IntegrationTest extends TestCase
 {
@@ -341,12 +341,18 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
             ->willThrowException(new TransferException('connection refused'));
         $this->setProperty($integration, 'client', $client);
 
-        self::assertFalse($integration->getUser(['token_type' => 'Bearer', 'access_token' => 'access']));
+        try {
+            $integration->getUser(['token_type' => 'Bearer', 'access_token' => 'access']);
+            self::fail('Auth0 transport failure must be reported to the user.');
+        } catch (CustomUserMessageAuthenticationException $exception) {
+            self::assertSame(['%reason%' => 'connection refused'], $exception->getMessageData());
+        }
     }
 
     public function testGetUserReportsAuth0ErrorResponse(): void
     {
         $integration = $this->integrationWithKeys();
+        $this->expectLog($integration, 'HTTP 401: access_denied: Unauthorized');
 
         $client = $this->createMock(ClientInterface::class);
         $client->expects(self::once())
@@ -357,10 +363,12 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
             ], 401));
         $this->setProperty($integration, 'client', $client);
 
-        $this->expectException(AuthenticationServiceException::class);
-        $this->expectExceptionMessage('Auth0 userinfo failed: HTTP 401: access_denied: Unauthorized');
-
-        $integration->getUser(['token_type' => 'Bearer', 'access_token' => 'access']);
+        try {
+            $integration->getUser(['token_type' => 'Bearer', 'access_token' => 'access']);
+            self::fail('Auth0 error response must be reported to the user.');
+        } catch (CustomUserMessageAuthenticationException $exception) {
+            self::assertSame(['%reason%' => 'access_denied: Unauthorized'], $exception->getMessageData());
+        }
     }
 
     public function testGetUserLogsWhenSubjectDoesNotMatchAuth0User(): void
@@ -372,7 +380,12 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
 
         $this->getClient($integration, $accessSettings, $token, ['user_id' => 'someone-else']);
 
-        self::assertFalse($integration->getUser($token));
+        try {
+            $integration->getUser($token);
+            self::fail('A mismatched Auth0 user must be reported to the user.');
+        } catch (CustomUserMessageAuthenticationException $exception) {
+            self::assertSame(['%reason%' => 'Auth0 user does not match the authenticated subject.'], $exception->getMessageData());
+        }
     }
 
     /**

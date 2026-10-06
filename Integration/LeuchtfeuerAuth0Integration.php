@@ -10,9 +10,9 @@ use Mautic\PluginBundle\Integration\AbstractSsoServiceIntegration;
 use Mautic\UserBundle\Entity\Role;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Security\Provider\UserProvider;
+use MauticPlugin\LeuchtfeuerAuth0Bundle\Exception\LoginFailure;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 
 class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 {
@@ -125,14 +125,12 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             $managementToken = $this->getManagementToken();
 
             if (!array_key_exists('token_type', $managementToken) || !array_key_exists('access_token', $managementToken)) {
-                throw new AuthenticationServiceException('Auth0 management token is missing token_type or access_token.');
+                $this->failLogin('Auth0 management token is missing token_type or access_token.');
             }
 
             $subject = $userInfo['sub'] ?? null;
             if (!is_string($subject) || '' === $subject) {
-                $this->logLoginFailure('userinfo response did not include a subject.');
-
-                return false;
+                $this->failLogin('Auth0 userinfo response did not include a subject.');
             }
 
             $auth0User = $this->getAuth0User($subject, $managementToken);
@@ -143,13 +141,9 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
                 return $this->createMauticUserFromAuth0User();
             }
 
-            $this->logLoginFailure('Auth0 user does not match the authenticated subject.');
-
-            return false;
+            $this->failLogin('Auth0 user does not match the authenticated subject.');
         } catch (GuzzleException $exception) {
-            $this->logLoginFailure('request to Auth0 failed: '.$exception->getMessage());
-
-            return false;
+            $this->failLogin('request to Auth0 failed: '.$exception->getMessage(), $exception);
         }
     }
 
@@ -190,7 +184,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     protected function getUserInfo(array $token): array
     {
         if (!array_key_exists('token_type', $token) || !array_key_exists('access_token', $token)) {
-            throw new AuthenticationServiceException('Auth0 access token is missing token_type or access_token.');
+            $this->failLogin('Auth0 access token is missing token_type or access_token.');
         }
 
         if (!is_string($token['token_type']) || !is_string($token['access_token'])) {
@@ -219,7 +213,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     protected function getManagementToken(): array
     {
         if (!array_key_exists('audience', $this->keys) || !array_key_exists('domain', $this->keys)) {
-            throw new AuthenticationServiceException('Auth0 domain or audience is not configured.');
+            $this->failLogin('Auth0 domain or audience is not configured.');
         }
 
         if (!is_string($this->keys['audience']) || !is_string($this->keys['domain'])) {
@@ -257,7 +251,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             || !array_key_exists('token_type', $managementToken)
             || !array_key_exists('access_token', $managementToken)
         ) {
-            throw new AuthenticationServiceException('Auth0 management token is missing token_type or access_token.');
+            $this->failLogin('Auth0 management token is missing token_type or access_token.');
         }
 
         if (
@@ -440,7 +434,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 
         $reason = $this->describeAuth0Error($decoded, $status);
         if (null !== $reason) {
-            throw new AuthenticationServiceException(sprintf('Auth0 %s failed: %s', $step, $reason));
+            $this->failLogin(sprintf('Auth0 %s failed: %s', $step, $reason));
         }
 
         /** @var array<string, mixed> $decoded */
@@ -476,8 +470,8 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         return [] === $details ? 'HTTP '.$status : implode(': ', $details);
     }
 
-    private function logLoginFailure(string $reason): void
+    private function failLogin(string $reason, ?\Throwable $previous = null): never
     {
-        $this->logger->error('Auth0 login failed: '.$reason);
+        LoginFailure::report($this->logger, $reason, $previous);
     }
 }

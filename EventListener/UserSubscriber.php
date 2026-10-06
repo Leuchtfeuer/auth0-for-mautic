@@ -6,8 +6,10 @@ use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Event\AuthenticationEvent;
 use Mautic\UserBundle\UserEvents;
+use MauticPlugin\LeuchtfeuerAuth0Bundle\Exception\LoginFailure;
 use MauticPlugin\LeuchtfeuerAuth0Bundle\Integration\LeuchtfeuerAuth0Integration;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -41,10 +43,10 @@ class UserSubscriber implements EventSubscriberInterface
 
         try {
             $this->authenticate($event, $authenticatingService);
-        } catch (\Throwable $exception) {
-            $this->logger->error('Auth0 login failed: '.$exception->getMessage(), ['exception' => $exception]);
-
+        } catch (CustomUserMessageAuthenticationException $exception) {
             throw $exception;
+        } catch (\Throwable $exception) {
+            LoginFailure::report($this->logger, $exception->getMessage(), $exception);
         }
     }
 
@@ -70,6 +72,8 @@ class UserSubscriber implements EventSubscriberInterface
             $event->setIsAuthenticated($authenticatingService, $result, $integration->shouldAutoCreateNewUser());
         } elseif ($result instanceof Response) {
             $event->setResponse($result);
+        } elseif ($loginCheck) {
+            LoginFailure::report($this->logger, 'Auth0 login did not return a user.');
         }
     }
 
@@ -81,7 +85,7 @@ class UserSubscriber implements EventSubscriberInterface
         }
 
         if (is_string($reason) && '' !== $reason) {
-            $this->logger->error('Auth0 login failed: '.$reason);
+            LoginFailure::report($this->logger, $reason);
         }
     }
 

@@ -15,6 +15,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 
 final class UserSubscriberTest extends TestCase
 {
@@ -211,8 +212,9 @@ final class UserSubscriberTest extends TestCase
         $event->method('getRequest')
             ->willReturn(new Request());
 
-        $this->logger->expects(self::never())
-            ->method('error');
+        $this->logger->expects(self::once())
+            ->method('error')
+            ->with('Auth0 login failed: Auth0 login did not return a user.');
 
         // Verify user is NOT authenticated
         $event->expects(self::never())
@@ -221,18 +223,19 @@ final class UserSubscriberTest extends TestCase
         $event->expects(self::never())
             ->method('setResponse');
 
-        // ========================================
-        // ACT: Trigger Event
-        // ========================================
-        $this->subscriber->onUserAuthentication($event);
+        try {
+            $this->subscriber->onUserAuthentication($event);
+            self::fail('A login that returns no user must be reported.');
+        } catch (CustomUserMessageAuthenticationException $exception) {
+            self::assertSame(['%reason%' => 'Auth0 login did not return a user.'], $exception->getMessageData());
+        }
     }
 
     public function testCallbackErrorFromAuth0IsLogged(): void
     {
         $integration = $this->createMock(LeuchtfeuerAuth0Integration::class);
-        $integration->expects(self::once())
-            ->method('ssoAuthCallback')
-            ->willReturn(false);
+        $integration->expects(self::never())
+            ->method('ssoAuthCallback');
 
         $event = $this->createMock(AuthenticationEvent::class);
         $event->method('getAuthenticatingService')
@@ -253,7 +256,12 @@ final class UserSubscriberTest extends TestCase
         $event->expects(self::never())
             ->method('setIsAuthenticated');
 
-        $this->subscriber->onUserAuthentication($event);
+        try {
+            $this->subscriber->onUserAuthentication($event);
+            self::fail('An Auth0 callback error must be reported.');
+        } catch (CustomUserMessageAuthenticationException $exception) {
+            self::assertSame(['%reason%' => 'User denied access'], $exception->getMessageData());
+        }
     }
 
     public function testExceptionDuringLoginIsLoggedAndRethrown(): void
@@ -282,9 +290,11 @@ final class UserSubscriberTest extends TestCase
                 self::callback(static fn (array $context): bool => ($context['exception'] ?? null) instanceof \RuntimeException)
             );
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Auth0 userinfo failed: HTTP 401: access_denied');
-
-        $this->subscriber->onUserAuthentication($event);
+        try {
+            $this->subscriber->onUserAuthentication($event);
+            self::fail('An unexpected login error must be reported.');
+        } catch (CustomUserMessageAuthenticationException $exception) {
+            self::assertSame(['%reason%' => 'access_denied'], $exception->getMessageData());
+        }
     }
 }
