@@ -9,11 +9,11 @@ use Mautic\UserBundle\UserEvents;
 use MauticPlugin\LeuchtfeuerAuth0Bundle\Exception\LoginFailure;
 use MauticPlugin\LeuchtfeuerAuth0Bundle\Integration\LeuchtfeuerAuth0Integration;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 
 class UserSubscriber implements EventSubscriberInterface
 {
