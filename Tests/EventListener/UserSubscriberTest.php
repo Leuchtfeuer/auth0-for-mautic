@@ -12,11 +12,14 @@ use MauticPlugin\LeuchtfeuerAuth0Bundle\EventListener\UserSubscriber;
 use MauticPlugin\LeuchtfeuerAuth0Bundle\Integration\LeuchtfeuerAuth0Integration;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 
 final class UserSubscriberTest extends TestCase
 {
     private MockObject&CoreParametersHelper $coreParametersHelper;
+    private MockObject&LoggerInterface $logger;
     private UserSubscriber $subscriber;
 
     protected function setUp(): void
@@ -24,7 +27,8 @@ final class UserSubscriberTest extends TestCase
         parent::setUp();
 
         $this->coreParametersHelper = $this->createMock(CoreParametersHelper::class);
-        $this->subscriber           = new UserSubscriber($this->coreParametersHelper);
+        $this->logger               = $this->createMock(LoggerInterface::class);
+        $this->subscriber           = new UserSubscriber($this->coreParametersHelper, $this->logger);
     }
 
     public function testGetSubscribedEvents(): void
@@ -83,6 +87,12 @@ final class UserSubscriberTest extends TestCase
         $event->expects(self::once())
             ->method('isLoginCheck')
             ->willReturn(true);
+
+        $event->method('getRequest')
+            ->willReturn(new Request());
+
+        $this->logger->expects(self::never())
+            ->method('error');
 
         // Verify user is authenticated
         $event->expects(self::once())
@@ -198,6 +208,12 @@ final class UserSubscriberTest extends TestCase
             ->method('isLoginCheck')
             ->willReturn(true);
 
+        $event->method('getRequest')
+            ->willReturn(new Request());
+
+        $this->logger->expects(self::never())
+            ->method('error');
+
         // Verify user is NOT authenticated
         $event->expects(self::never())
             ->method('setIsAuthenticated');
@@ -208,6 +224,67 @@ final class UserSubscriberTest extends TestCase
         // ========================================
         // ACT: Trigger Event
         // ========================================
+        $this->subscriber->onUserAuthentication($event);
+    }
+
+    public function testCallbackErrorFromAuth0IsLogged(): void
+    {
+        $integration = $this->createMock(LeuchtfeuerAuth0Integration::class);
+        $integration->expects(self::once())
+            ->method('ssoAuthCallback')
+            ->willReturn(false);
+
+        $event = $this->createMock(AuthenticationEvent::class);
+        $event->method('getAuthenticatingService')
+            ->willReturn(LeuchtfeuerAuth0Integration::NAME);
+        $event->method('getIntegration')
+            ->willReturn($integration);
+        $event->method('getUserProvider')
+            ->willReturn($this->createMock(UserProvider::class));
+        $event->method('isLoginCheck')
+            ->willReturn(true);
+        $event->method('getRequest')
+            ->willReturn(new Request(['error_description' => 'User denied access']));
+
+        $this->logger->expects(self::once())
+            ->method('error')
+            ->with('Auth0 login failed: User denied access');
+
+        $event->expects(self::never())
+            ->method('setIsAuthenticated');
+
+        $this->subscriber->onUserAuthentication($event);
+    }
+
+    public function testExceptionDuringLoginIsLoggedAndRethrown(): void
+    {
+        $integration = $this->createMock(LeuchtfeuerAuth0Integration::class);
+        $integration->expects(self::once())
+            ->method('ssoAuthCallback')
+            ->willThrowException(new \RuntimeException('Auth0 userinfo failed: HTTP 401: access_denied'));
+
+        $event = $this->createMock(AuthenticationEvent::class);
+        $event->method('getAuthenticatingService')
+            ->willReturn(LeuchtfeuerAuth0Integration::NAME);
+        $event->method('getIntegration')
+            ->willReturn($integration);
+        $event->method('getUserProvider')
+            ->willReturn($this->createMock(UserProvider::class));
+        $event->method('isLoginCheck')
+            ->willReturn(true);
+        $event->method('getRequest')
+            ->willReturn(new Request());
+
+        $this->logger->expects(self::once())
+            ->method('error')
+            ->with(
+                'Auth0 login failed: Auth0 userinfo failed: HTTP 401: access_denied',
+                self::callback(static fn (array $context): bool => ($context['exception'] ?? null) instanceof \RuntimeException)
+            );
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Auth0 userinfo failed: HTTP 401: access_denied');
+
         $this->subscriber->onUserAuthentication($event);
     }
 }

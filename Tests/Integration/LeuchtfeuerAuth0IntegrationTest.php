@@ -6,6 +6,7 @@ namespace MauticPlugin\LeuchtfeuerAuth0Bundle\Tests\Integration;
 
 use Doctrine\ORM\EntityManager;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\TransferException;
 use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\PluginBundle\Entity\Integration;
 use Mautic\UserBundle\Entity\Role;
@@ -16,6 +17,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 
 class LeuchtfeuerAuth0IntegrationTest extends TestCase
 {
@@ -327,12 +330,91 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
         $integration->getUser($token);
     }
 
+    public function testGetUserLogsTransportFailureAndReturnsFalse(): void
+    {
+        $integration = $this->integrationWithKeys();
+        $this->expectLog($integration, 'connection refused');
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects(self::once())
+            ->method('request')
+            ->willThrowException(new TransferException('connection refused'));
+        $this->setProperty($integration, 'client', $client);
+
+        self::assertFalse($integration->getUser(['token_type' => 'Bearer', 'access_token' => 'access']));
+    }
+
+    public function testGetUserReportsAuth0ErrorResponse(): void
+    {
+        $integration = $this->integrationWithKeys();
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects(self::once())
+            ->method('request')
+            ->willReturn($this->getGuzzleResponse([
+                'error'             => 'access_denied',
+                'error_description' => 'Unauthorized',
+            ], 401));
+        $this->setProperty($integration, 'client', $client);
+
+        $this->expectException(AuthenticationServiceException::class);
+        $this->expectExceptionMessage('Auth0 userinfo failed: HTTP 401: access_denied: Unauthorized');
+
+        $integration->getUser(['token_type' => 'Bearer', 'access_token' => 'access']);
+    }
+
+    public function testGetUserLogsWhenSubjectDoesNotMatchAuth0User(): void
+    {
+        $accessSettings = ['domain' => 'dom.ain', 'client_secret' => 'Secret!', 'client_id' => 'client id!', 'audience' => 'The audience'];
+        $token          = ['token_type' => 'type', 'access_token' => 'access'];
+        $integration    = $this->integrationWithKeys($accessSettings);
+        $this->expectLog($integration, 'Auth0 user does not match the authenticated subject.');
+
+        $this->getClient($integration, $accessSettings, $token, ['user_id' => 'someone-else']);
+
+        self::assertFalse($integration->getUser($token));
+    }
+
+    /**
+     * @param array<string, string> $accessSettings
+     */
+    private function integrationWithKeys(array $accessSettings = ['domain' => 'dom.ain', 'client_secret' => 'Secret!', 'client_id' => 'client id!', 'audience' => 'api/v2']): LeuchtfeuerAuth0Integration
+    {
+        $integration = $this->getMockBuilder(LeuchtfeuerAuth0Integration::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['setClient', 'getDecryptedApiKeys'])
+            ->getMock();
+
+        $integration->method('getDecryptedApiKeys')
+            ->willReturn($accessSettings);
+
+        $integration->setIntegrationSettings($this->createMock(Integration::class));
+
+        return $integration;
+    }
+
+    private function expectLog(LeuchtfeuerAuth0Integration $integration, string $reason): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects(self::once())
+            ->method('error')
+            ->with(self::stringContains($reason));
+
+        $this->setProperty($integration, 'logger', $logger);
+    }
+
+    private function setProperty(object $object, string $property, mixed $value): void
+    {
+        $reflection = new \ReflectionProperty($object, $property);
+        $reflection->setValue($object, $value);
+    }
+
     /**
      * @param array<mixed> $data
      *
      * @return MockObject&ResponseInterface
      */
-    private function getGuzzleResponse(array $data)
+    private function getGuzzleResponse(array $data, int $status = 200)
     {
         $stream = $this->createMock(StreamInterface::class);
         $stream->method('getContents')
@@ -341,6 +423,8 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
         $response = $this->createMock(ResponseInterface::class);
         $response->method('getBody')
             ->willReturn($stream);
+        $response->method('getStatusCode')
+            ->willReturn($status);
 
         return $response;
     }
