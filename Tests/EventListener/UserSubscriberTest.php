@@ -15,6 +15,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 
 final class UserSubscriberTest extends TestCase
@@ -294,7 +295,42 @@ final class UserSubscriberTest extends TestCase
             $this->subscriber->onUserAuthentication($event);
             self::fail('An unexpected login error must be reported.');
         } catch (CustomUserMessageAuthenticationException $exception) {
-            self::assertSame(['%reason%' => 'access_denied'], $exception->getMessageData());
+            self::assertSame('plugin.auth0.login_failed_generic', $exception->getMessageKey());
+            self::assertSame([], $exception->getMessageData());
+        }
+    }
+
+    public function testMauticValidationErrorIsLoggedAndRethrown(): void
+    {
+        $failure     = new AuthenticationException('mautic.integration.sso.error.no_role');
+        $integration = $this->createMock(LeuchtfeuerAuth0Integration::class);
+        $integration->expects(self::once())
+            ->method('ssoAuthCallback')
+            ->willThrowException($failure);
+
+        $event = $this->createMock(AuthenticationEvent::class);
+        $event->method('getAuthenticatingService')
+            ->willReturn(LeuchtfeuerAuth0Integration::NAME);
+        $event->method('getIntegration')
+            ->willReturn($integration);
+        $event->method('getUserProvider')
+            ->willReturn($this->createMock(UserProvider::class));
+        $event->method('isLoginCheck')
+            ->willReturn(true);
+        $event->method('getRequest')
+            ->willReturn(new Request());
+
+        $this->logger->expects(self::once())
+            ->method('error')
+            ->with('Auth0 login failed: mautic.integration.sso.error.no_role', ['exception' => $failure]);
+
+        try {
+            $this->subscriber->onUserAuthentication($event);
+            self::fail('A Mautic validation error must reach the login page unchanged.');
+        } catch (CustomUserMessageAuthenticationException) {
+            self::fail('A Mautic validation error must not be replaced with the Auth0 notice.');
+        } catch (AuthenticationException $exception) {
+            self::assertSame($failure, $exception);
         }
     }
 }

@@ -46,7 +46,7 @@ class UserSubscriber implements EventSubscriberInterface
         } catch (CustomUserMessageAuthenticationException $exception) {
             throw $exception;
         } catch (\Throwable $exception) {
-            LoginFailure::report($this->logger, $exception->getMessage(), $exception);
+            LoginFailure::reportUnexpected($this->logger, $exception);
         }
     }
 
