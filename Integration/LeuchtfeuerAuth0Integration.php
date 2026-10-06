@@ -107,6 +107,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
      *
      * @return false|User
      *
+     * @throws \Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException
      * @throws \Doctrine\ORM\ORMException
      */
     public function getUser($response): bool|User

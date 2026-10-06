@@ -22,10 +22,14 @@ final class LoginFailure
      */
     public static function shortMessage(string $reason): string
     {
-        $parts = preg_split('/: /', $reason) ?: [$reason];
+        $parts = preg_split('/: /', $reason);
+        if (false === $parts) {
+            $parts = [$reason];
+        }
+
         $parts = array_values(array_filter(
             $parts,
-            static fn (string $part): bool => !preg_match('/^(HTTP \d+|request to Auth0 failed|Auth0 .+ failed)$/', $part),
+            static fn (string $part): bool => 1 !== preg_match('/^(HTTP \d+|request to Auth0 failed|Auth0 .+ failed)$/', $part),
         ));
 
         $short = trim(implode(': ', $parts));
