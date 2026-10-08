@@ -144,7 +144,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 
             $this->failLogin($this->translator->trans('plugin.auth0.login_failed_subject_mismatch'));
         } catch (GuzzleException $exception) {
-            $this->failLogin('request to Auth0 failed: '.$exception->getMessage(), $exception);
+            $this->failLogin('request to Auth0 failed: '.$exception->getMessage(), $exception, $exception->getMessage());
         }
     }
 
@@ -435,7 +435,11 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 
         $reason = $this->describeAuth0Error($decoded, $status);
         if (null !== $reason) {
-            $this->failLogin(sprintf('Auth0 %s failed: %s', $step, $reason));
+            $this->failLogin(
+                sprintf('Auth0 %s failed: %s', $step, $reason),
+                null,
+                $this->auth0ErrorMessage($decoded) ?? '',
+            );
         }
 
         /** @var array<string, mixed> $decoded */
@@ -461,18 +465,32 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             $details[] = 'HTTP '.$bodyStatus;
         }
 
-        foreach (['error', 'error_description', 'message', 'errorCode'] as $key) {
-            $value = $payload[$key] ?? null;
-            if (is_string($value) && '' !== $value) {
-                $details[] = $value;
-            }
+        $message = $this->auth0ErrorMessage($payload);
+        if (null !== $message) {
+            $details[] = $message;
         }
 
         return [] === $details ? 'HTTP '.$status : implode(': ', $details);
     }
 
-    private function failLogin(string $reason, ?\Throwable $previous = null): never
+    /**
+     * @param array<mixed> $payload
+     */
+    private function auth0ErrorMessage(array $payload): ?string
     {
-        LoginFailure::report($this->logger, $reason, $previous);
+        $parts = [];
+        foreach (['error', 'error_description', 'message', 'errorCode'] as $key) {
+            $value = $payload[$key] ?? null;
+            if (is_string($value) && '' !== $value) {
+                $parts[] = $value;
+            }
+        }
+
+        return [] === $parts ? null : implode(': ', $parts);
+    }
+
+    private function failLogin(string $reason, ?\Throwable $previous = null, ?string $userMessage = null): never
+    {
+        LoginFailure::report($this->logger, $reason, $previous, $userMessage);
     }
 }

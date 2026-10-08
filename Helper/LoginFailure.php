@@ -14,12 +14,12 @@ final class LoginFailure
 
     private const ELLIPSIS = '...';
 
-    public static function report(LoggerInterface $logger, string $reason, ?\Throwable $previous = null): never
+    public static function report(LoggerInterface $logger, string $reason, ?\Throwable $previous = null, ?string $userMessage = null): never
     {
         $logger->error('Auth0 login failed: '.$reason, null !== $previous ? ['exception' => $previous] : []);
 
         // Login page shows getMessageKey(), not the exception message. The short reason is a parameter so Auth0 text is not parsed as a translation placeholder.
-        throw new CustomUserMessageAuthenticationException('plugin.auth0.login_failed', ['%reason%' => self::shortMessage($reason)], 0, $previous);
+        throw new CustomUserMessageAuthenticationException('plugin.auth0.login_failed', ['%reason%' => self::shortMessage($userMessage ?? $reason)], 0, $previous);
     }
 
     /**
@@ -44,17 +44,7 @@ final class LoginFailure
      */
     public static function shortMessage(string $reason): string
     {
-        $parts = preg_split('/: /', $reason);
-        if (false === $parts) {
-            $parts = [$reason];
-        }
-
-        $parts = array_values(array_filter(
-            $parts,
-            static fn (string $part): bool => 1 !== preg_match('/^(HTTP \d+|request to Auth0 failed|Auth0 .+ failed)$/', $part),
-        ));
-
-        $short = trim(implode(': ', $parts));
+        $short = trim($reason);
         if ('' === $short) {
             $short = 'Auth0 login failed.';
         }
