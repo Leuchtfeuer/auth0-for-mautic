@@ -10,7 +10,7 @@ use Mautic\PluginBundle\Integration\AbstractSsoServiceIntegration;
 use Mautic\UserBundle\Entity\Role;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Security\Provider\UserProvider;
-use MauticPlugin\LeuchtfeuerAuth0Bundle\Exception\LoginFailure;
+use MauticPlugin\LeuchtfeuerAuth0Bundle\Helper\LoginFailure;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 

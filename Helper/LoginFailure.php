@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace MauticPlugin\LeuchtfeuerAuth0Bundle\Exception;
+namespace MauticPlugin\LeuchtfeuerAuth0Bundle\Helper;
 
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
