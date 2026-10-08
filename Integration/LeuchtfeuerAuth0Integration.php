@@ -10,8 +10,9 @@ use Mautic\PluginBundle\Integration\AbstractSsoServiceIntegration;
 use Mautic\UserBundle\Entity\Role;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Security\Provider\UserProvider;
+use MauticPlugin\LeuchtfeuerAuth0Bundle\Helper\LoginFailure;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 
 class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 {
@@ -106,6 +107,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
      *
      * @return false|User
      *
+     * @throws \Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException
      * @throws \Doctrine\ORM\ORMException
      */
     public function getUser($response): bool|User
@@ -124,26 +126,26 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             $managementToken = $this->getManagementToken();
 
             if (!array_key_exists('token_type', $managementToken) || !array_key_exists('access_token', $managementToken)) {
-                throw new AuthenticationServiceException('Management token');
+                $this->failLogin('Auth0 management token is missing token_type or access_token.');
             }
 
-            if (!is_string($userInfo['sub'])) {
-                return false;
+            $subject = $userInfo['sub'] ?? null;
+            if (!is_string($subject) || '' === $subject) {
+                $this->failLogin('Auth0 userinfo response did not include a subject.');
             }
 
-            $auth0User = $this->getAuth0User($userInfo['sub'], $managementToken);
-        } catch (GuzzleException) {
-            return false;
+            $auth0User = $this->getAuth0User($subject, $managementToken);
+
+            if (isset($auth0User['user_id']) && $auth0User['user_id'] === $subject) {
+                $this->auth0User = $auth0User;
+
+                return $this->createMauticUserFromAuth0User();
+            }
+
+            $this->failLogin($this->translator->trans('plugin.auth0.login_failed_subject_mismatch'));
+        } catch (GuzzleException $exception) {
+            $this->failLogin('request to Auth0 failed: '.$exception->getMessage(), $exception, $exception->getMessage());
         }
-
-        if (isset($auth0User['user_id']) && $auth0User['user_id'] === $userInfo['sub']) {
-            // There is a user
-            $this->auth0User = $auth0User;
-
-            return $this->createMauticUserFromAuth0User();
-        }
-
-        return false;
     }
 
     /**
@@ -183,7 +185,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     protected function getUserInfo(array $token): array
     {
         if (!array_key_exists('token_type', $token) || !array_key_exists('access_token', $token)) {
-            throw new AuthenticationServiceException('Token');
+            $this->failLogin('Auth0 access token is missing token_type or access_token.');
         }
 
         if (!is_string($token['token_type']) || !is_string($token['access_token'])) {
@@ -199,16 +201,9 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
                 ],
                 'http_errors' => false,
             ]
-        )->getBody()->getContents();
+        );
 
-        $apiResponse = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
-
-        if (!is_array($apiResponse)) {
-            throw new \RuntimeException('The api response must be an array.');
-        }
-
-        /** @var array<string, mixed> $apiResponse */
-        return $apiResponse;
+        return $this->decodeAuth0Response('userinfo', $response);
     }
 
     /**
@@ -219,7 +214,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
     protected function getManagementToken(): array
     {
         if (!array_key_exists('audience', $this->keys) || !array_key_exists('domain', $this->keys)) {
-            throw new AuthenticationServiceException('Token');
+            $this->failLogin('Auth0 domain or audience is not configured.');
         }
 
         if (!is_string($this->keys['audience']) || !is_string($this->keys['domain'])) {
@@ -238,15 +233,9 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
                 ],
                 'http_errors' => false,
             ]
-        )->getBody()->getContents();
+        );
 
-        $apiResponse = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
-
-        if (!is_array($apiResponse)) {
-            throw new \RuntimeException('The api response must be an array.');
-        }
-
-        return $apiResponse;
+        return $this->decodeAuth0Response('management token', $response);
     }
 
     /**
@@ -263,7 +252,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             || !array_key_exists('token_type', $managementToken)
             || !array_key_exists('access_token', $managementToken)
         ) {
-            throw new AuthenticationServiceException('Token');
+            $this->failLogin('Auth0 management token is missing token_type or access_token.');
         }
 
         if (
@@ -283,16 +272,9 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
                 ],
                 'http_errors' => false,
             ]
-        )->getBody()->getContents();
+        );
 
-        $apiResponse = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
-
-        if (!is_array($apiResponse)) {
-            throw new \RuntimeException('The api response must be an array.');
-        }
-
-        /** @var array<string, mixed> $apiResponse */
-        return $apiResponse;
+        return $this->decodeAuth0Response('user profile', $response);
     }
 
     /**
@@ -430,5 +412,85 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         $domain = rtrim($domain, '/');
 
         return $domain;
+    }
+
+    /**
+     * Auth0 error bodies stay in the response because requests are sent with http_errors disabled.
+     *
+     * @return array<string, mixed>
+     */
+    private function decodeAuth0Response(string $step, ResponseInterface $response): array
+    {
+        $status = $response->getStatusCode();
+
+        try {
+            $decoded = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            throw new \RuntimeException(sprintf('Auth0 %s returned HTTP %d with a body that is not JSON.', $step, $status));
+        }
+
+        if (!is_array($decoded)) {
+            throw new \RuntimeException(sprintf('Auth0 %s returned HTTP %d with an unexpected body.', $step, $status));
+        }
+
+        $reason = $this->describeAuth0Error($decoded, $status);
+        if (null !== $reason) {
+            $this->failLogin(
+                sprintf('Auth0 %s failed: %s', $step, $reason),
+                null,
+                $this->auth0ErrorMessage($decoded) ?? 'HTTP '.$status,
+            );
+        }
+
+        /** @var array<string, mixed> $decoded */
+        return $decoded;
+    }
+
+    /**
+     * @param array<mixed> $payload
+     */
+    private function describeAuth0Error(array $payload, int $status): ?string
+    {
+        $bodyStatus = $payload['statusCode'] ?? null;
+        $hasError   = isset($payload['error']) || (is_int($bodyStatus) && $bodyStatus >= 400);
+
+        if ($status < 400 && !$hasError) {
+            return null;
+        }
+
+        $details = [];
+        if ($status >= 400) {
+            $details[] = 'HTTP '.$status;
+        } elseif (is_int($bodyStatus) && $bodyStatus >= 400) {
+            $details[] = 'HTTP '.$bodyStatus;
+        }
+
+        $message = $this->auth0ErrorMessage($payload);
+        if (null !== $message) {
+            $details[] = $message;
+        }
+
+        return [] === $details ? 'HTTP '.$status : implode(': ', $details);
+    }
+
+    /**
+     * @param array<mixed> $payload
+     */
+    private function auth0ErrorMessage(array $payload): ?string
+    {
+        $parts = [];
+        foreach (['error', 'error_description', 'message', 'errorCode'] as $key) {
+            $value = $payload[$key] ?? null;
+            if (is_string($value) && '' !== $value) {
+                $parts[] = $value;
+            }
+        }
+
+        return [] === $parts ? null : implode(': ', $parts);
+    }
+
+    private function failLogin(string $reason, ?\Throwable $previous = null, ?string $userMessage = null): never
+    {
+        LoginFailure::report($this->logger, $reason, $previous, $userMessage);
     }
 }

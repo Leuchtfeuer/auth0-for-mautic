@@ -6,15 +6,23 @@ use Mautic\CoreBundle\Helper\CoreParametersHelper;
 use Mautic\UserBundle\Entity\User;
 use Mautic\UserBundle\Event\AuthenticationEvent;
 use Mautic\UserBundle\UserEvents;
+use MauticPlugin\LeuchtfeuerAuth0Bundle\Helper\LoginFailure;
 use MauticPlugin\LeuchtfeuerAuth0Bundle\Integration\LeuchtfeuerAuth0Integration;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class UserSubscriber implements EventSubscriberInterface
 {
-    public function __construct(protected CoreParametersHelper $coreParametersHelper)
-    {
+    public function __construct(
+        protected CoreParametersHelper $coreParametersHelper,
+        private readonly LoggerInterface $logger,
+        private readonly TranslatorInterface $translator,
+    ) {
     }
 
     /**
@@ -31,23 +39,55 @@ class UserSubscriber implements EventSubscriberInterface
     {
         $authenticatingService = $event->getAuthenticatingService();
 
-        if (LeuchtfeuerAuth0Integration::NAME === $authenticatingService) {
-            $integration = $event->getIntegration($authenticatingService);
+        if (LeuchtfeuerAuth0Integration::NAME !== $authenticatingService) {
+            return;
+        }
 
-            if (!$integration instanceof LeuchtfeuerAuth0Integration) {
-                throw new \RuntimeException('The integration is not found.');
-            }
+        try {
+            $this->authenticate($event, $authenticatingService);
+        } catch (CustomUserMessageAuthenticationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            LoginFailure::reportUnexpected($this->logger, $exception);
+        }
+    }
 
-            $integration->setCoreParametersHelper($this->coreParametersHelper);
-            $integration->setUserProvider($event->getUserProvider());
+    private function authenticate(AuthenticationEvent $event, string $authenticatingService): void
+    {
+        $integration = $event->getIntegration($authenticatingService);
 
-            $result = $this->authenticateService($integration, $event->isLoginCheck());
+        if (!$integration instanceof LeuchtfeuerAuth0Integration) {
+            throw new \RuntimeException('The integration is not found.');
+        }
 
-            if ($result instanceof User) {
-                $event->setIsAuthenticated($authenticatingService, $result, $integration->shouldAutoCreateNewUser());
-            } elseif ($result instanceof Response) {
-                $event->setResponse($result);
-            }
+        $integration->setCoreParametersHelper($this->coreParametersHelper);
+        $integration->setUserProvider($event->getUserProvider());
+
+        $loginCheck = (bool) $event->isLoginCheck();
+        if ($loginCheck) {
+            $this->logCallbackError($event->getRequest());
+        }
+
+        $result = $this->authenticateService($integration, $loginCheck);
+
+        if ($result instanceof User) {
+            $event->setIsAuthenticated($authenticatingService, $result, $integration->shouldAutoCreateNewUser());
+        } elseif ($result instanceof Response) {
+            $event->setResponse($result);
+        } elseif ($loginCheck) {
+            LoginFailure::report($this->logger, $this->translator->trans('plugin.auth0.login_failed_no_user'));
+        }
+    }
+
+    private function logCallbackError(Request $request): void
+    {
+        $reason = $request->query->get('error_description') ?? $request->query->get('error');
+        if (!is_string($reason) || '' === $reason) {
+            $reason = $request->request->get('error_description') ?? $request->request->get('error');
+        }
+
+        if (is_string($reason) && '' !== $reason) {
+            LoginFailure::report($this->logger, $reason);
         }
     }
 
