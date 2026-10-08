@@ -438,7 +438,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
             $this->failLogin(
                 sprintf('Auth0 %s failed: %s', $step, $reason),
                 null,
-                $this->auth0ErrorMessage($decoded) ?? '',
+                $this->auth0ErrorMessage($decoded) ?? 'HTTP '.$status,
             );
         }
 
