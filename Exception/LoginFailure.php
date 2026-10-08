@@ -10,6 +10,10 @@ use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationExc
 
 final class LoginFailure
 {
+    private const MAX_REASON_LENGTH = 140;
+
+    private const ELLIPSIS = '...';
+
     public static function report(LoggerInterface $logger, string $reason, ?\Throwable $previous = null): never
     {
         $logger->error('Auth0 login failed: '.$reason, null !== $previous ? ['exception' => $previous] : []);
@@ -57,8 +61,8 @@ final class LoginFailure
 
         $short = preg_replace('/https?:\/\/\S+/', 'Auth0', $short) ?? $short;
 
-        if (mb_strlen($short) > 140) {
-            $short = rtrim(mb_substr($short, 0, 137)).'...';
+        if (mb_strlen($short) > self::MAX_REASON_LENGTH) {
+            $short = rtrim(mb_substr($short, 0, self::MAX_REASON_LENGTH - mb_strlen(self::ELLIPSIS))).self::ELLIPSIS;
         }
 
         return $short;
