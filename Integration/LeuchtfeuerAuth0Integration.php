@@ -142,7 +142,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
                 return $this->createMauticUserFromAuth0User();
             }
 
-            $this->failLogin('Auth0 user does not match the authenticated subject.');
+            $this->failLogin($this->translator->trans('plugin.auth0.login_failed_subject_mismatch'));
         } catch (GuzzleException $exception) {
             $this->failLogin('request to Auth0 failed: '.$exception->getMessage(), $exception);
         }

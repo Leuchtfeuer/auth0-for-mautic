@@ -17,11 +17,13 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class UserSubscriberTest extends TestCase
 {
     private MockObject&CoreParametersHelper $coreParametersHelper;
     private MockObject&LoggerInterface $logger;
+    private MockObject&TranslatorInterface $translator;
     private UserSubscriber $subscriber;
 
     protected function setUp(): void
@@ -30,7 +32,8 @@ final class UserSubscriberTest extends TestCase
 
         $this->coreParametersHelper = $this->createMock(CoreParametersHelper::class);
         $this->logger               = $this->createMock(LoggerInterface::class);
-        $this->subscriber           = new UserSubscriber($this->coreParametersHelper, $this->logger);
+        $this->translator           = $this->createMock(TranslatorInterface::class);
+        $this->subscriber           = new UserSubscriber($this->coreParametersHelper, $this->logger, $this->translator);
     }
 
     public function testGetSubscribedEvents(): void
@@ -212,6 +215,11 @@ final class UserSubscriberTest extends TestCase
 
         $event->method('getRequest')
             ->willReturn(new Request());
+
+        $this->translator->expects(self::once())
+            ->method('trans')
+            ->with('plugin.auth0.login_failed_no_user')
+            ->willReturn('Auth0 login did not return a user.');
 
         $this->logger->expects(self::once())
             ->method('error')

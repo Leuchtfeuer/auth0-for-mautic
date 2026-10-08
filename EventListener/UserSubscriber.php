@@ -14,12 +14,14 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class UserSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         protected CoreParametersHelper $coreParametersHelper,
         private readonly LoggerInterface $logger,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -73,7 +75,7 @@ class UserSubscriber implements EventSubscriberInterface
         } elseif ($result instanceof Response) {
             $event->setResponse($result);
         } elseif ($loginCheck) {
-            LoginFailure::report($this->logger, 'Auth0 login did not return a user.');
+            LoginFailure::report($this->logger, $this->translator->trans('plugin.auth0.login_failed_no_user'));
         }
     }
 

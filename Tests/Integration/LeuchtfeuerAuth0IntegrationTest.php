@@ -19,6 +19,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class LeuchtfeuerAuth0IntegrationTest extends TestCase
 {
@@ -376,6 +377,12 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
         $accessSettings = ['domain' => 'dom.ain', 'client_secret' => 'Secret!', 'client_id' => 'client id!', 'audience' => 'The audience'];
         $token          = ['token_type' => 'type', 'access_token' => 'access'];
         $integration    = $this->integrationWithKeys($accessSettings);
+        $translator     = $this->createMock(TranslatorInterface::class);
+        $translator->expects(self::once())
+            ->method('trans')
+            ->with('plugin.auth0.login_failed_subject_mismatch')
+            ->willReturn('Auth0 user does not match the authenticated subject.');
+        $this->setProperty($integration, 'translator', $translator);
         $this->expectLog($integration, 'Auth0 user does not match the authenticated subject.');
 
         $this->getClient($integration, $accessSettings, $token, ['user_id' => 'someone-else']);
