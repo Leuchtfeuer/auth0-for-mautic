@@ -24,19 +24,19 @@ final class LoginFailure
 
     /**
      * Log an unexpected failure. Mautic validation errors keep their own translated message.
-     * Anything else stays in the log and the login page only shows a generic notice.
+     * Everything else is logged in full and shown on the login notification (truncated).
      *
      * @throws AuthenticationException
      */
     public static function reportUnexpected(LoggerInterface $logger, \Throwable $exception): never
     {
-        $logger->error('Auth0 login failed: '.$exception->getMessage(), ['exception' => $exception]);
-
         if ($exception instanceof AuthenticationException && !$exception instanceof CustomUserMessageAuthenticationException) {
+            $logger->error('Auth0 login failed: '.$exception->getMessage(), ['exception' => $exception]);
+
             throw $exception;
         }
 
-        throw new CustomUserMessageAuthenticationException('plugin.auth0.login_failed_generic', [], 0, $exception);
+        self::report($logger, $exception->getMessage(), $exception);
     }
 
     /**

@@ -303,8 +303,11 @@ final class UserSubscriberTest extends TestCase
             $this->subscriber->onUserAuthentication($event);
             self::fail('An unexpected login error must be reported.');
         } catch (CustomUserMessageAuthenticationException $exception) {
-            self::assertSame('plugin.auth0.login_failed_generic', $exception->getMessageKey());
-            self::assertSame([], $exception->getMessageData());
+            self::assertSame('plugin.auth0.login_failed', $exception->getMessageKey());
+            self::assertSame(
+                ['%reason%' => 'Auth0 userinfo failed: HTTP 401: access_denied'],
+                $exception->getMessageData()
+            );
         }
     }
 

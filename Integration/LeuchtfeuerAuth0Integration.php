@@ -144,7 +144,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 
             $this->failLogin($this->translator->trans('plugin.auth0.login_failed_subject_mismatch'));
         } catch (GuzzleException $exception) {
-            $this->failLogin('request to Auth0 failed: '.$exception->getMessage(), $exception, $exception->getMessage());
+            $this->failLogin('request to Auth0 failed: '.$exception->getMessage(), $exception);
         }
     }
 
@@ -366,7 +366,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         $value = $this->setValueFromAuth0User($configurationParameter, $fallback);
 
         if (!is_string($value)) {
-            throw new \RuntimeException('The value "'.$configurationParameter.'" must be a string.');
+            $this->failLogin(sprintf('The value "%s" must be a string.', $configurationParameter));
         }
 
         return $value;
@@ -435,11 +435,8 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 
         $reason = $this->describeAuth0Error($decoded, $status);
         if (null !== $reason) {
-            $this->failLogin(
-                sprintf('Auth0 %s failed: %s', $step, $reason),
-                null,
-                $this->auth0ErrorMessage($decoded) ?? 'HTTP '.$status,
-            );
+            // Log and login notification share the full reason; LoginFailure truncates for the growl.
+            $this->failLogin(sprintf('Auth0 %s failed: %s', $step, $reason));
         }
 
         /** @var array<string, mixed> $decoded */

@@ -346,14 +346,14 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
             $integration->getUser(['token_type' => 'Bearer', 'access_token' => 'access']);
             self::fail('Auth0 transport failure must be reported to the user.');
         } catch (CustomUserMessageAuthenticationException $exception) {
-            self::assertSame(['%reason%' => 'connection refused'], $exception->getMessageData());
+            self::assertSame(['%reason%' => 'request to Auth0 failed: connection refused'], $exception->getMessageData());
         }
     }
 
     public function testGetUserReportsAuth0ErrorResponse(): void
     {
         $integration = $this->integrationWithKeys();
-        $this->expectLog($integration, 'HTTP 401: access_denied: Unauthorized');
+        $this->expectLog($integration, 'Auth0 userinfo failed: HTTP 401: access_denied: Unauthorized');
 
         $client = $this->createMock(ClientInterface::class);
         $client->expects(self::once())
@@ -368,7 +368,10 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
             $integration->getUser(['token_type' => 'Bearer', 'access_token' => 'access']);
             self::fail('Auth0 error response must be reported to the user.');
         } catch (CustomUserMessageAuthenticationException $exception) {
-            self::assertSame(['%reason%' => 'access_denied: Unauthorized'], $exception->getMessageData());
+            self::assertSame(
+                ['%reason%' => 'Auth0 userinfo failed: HTTP 401: access_denied: Unauthorized'],
+                $exception->getMessageData()
+            );
         }
     }
 
