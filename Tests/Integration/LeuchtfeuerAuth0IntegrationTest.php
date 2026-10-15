@@ -384,8 +384,8 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
     {
         $accessSettings = ['domain' => 'dom.ain', 'client_secret' => 'Secret!', 'client_id' => 'client id!', 'audience' => 'The audience'];
         $token          = ['token_type' => 'type', 'access_token' => 'access'];
-        $integration = $this->integrationWithKeys($accessSettings);
-        $translator  = $this->createMock(TranslatorInterface::class);
+        $integration    = $this->integrationWithKeys($accessSettings);
+        $translator     = $this->createMock(TranslatorInterface::class);
         $translator->method('trans')
             ->willReturnCallback(static function (string $id, array $parameters = []): string {
                 return match ($id) {
