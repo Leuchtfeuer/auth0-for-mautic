@@ -7,6 +7,7 @@ namespace MauticPlugin\LeuchtfeuerAuth0Bundle\Helper;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class LoginFailure
 {
@@ -14,12 +15,30 @@ final class LoginFailure
 
     private const ELLIPSIS = '...';
 
-    public static function report(LoggerInterface $logger, string $reason, ?\Throwable $previous = null, ?string $userMessage = null): never
-    {
+    /**
+     * Log the failure and throw a user-visible authentication error.
+     *
+     * Mautic's login SecurityController flashes AuthenticationException::getMessage()
+     * with empty translation vars, so getMessageData() is never applied. The exception
+     * message must already be the final plain-text string shown in the growl.
+     *
+     * @throws CustomUserMessageAuthenticationException
+     */
+    public static function report(
+        LoggerInterface $logger,
+        string $reason,
+        ?\Throwable $previous = null,
+        ?string $userMessage = null,
+        ?TranslatorInterface $translator = null,
+    ): never {
         $logger->error('Auth0 login failed: '.$reason, null !== $previous ? ['exception' => $previous] : []);
 
-        // Login page shows getMessageKey(), not the exception message. The short reason is a parameter so Auth0 text is not parsed as a translation placeholder.
-        throw new CustomUserMessageAuthenticationException('plugin.auth0.login_failed', ['%reason%' => self::shortMessage($userMessage ?? $reason)], 0, $previous);
+        $safeReason = self::shortMessage($userMessage ?? $reason);
+        $message    = null !== $translator
+            ? $translator->trans('plugin.auth0.login_failed', ['%reason%' => $safeReason])
+            : 'Auth0 login failed: '.$safeReason;
+
+        throw new CustomUserMessageAuthenticationException($message, [], 0, $previous);
     }
 
     /**
@@ -28,23 +47,27 @@ final class LoginFailure
      *
      * @throws AuthenticationException
      */
-    public static function reportUnexpected(LoggerInterface $logger, \Throwable $exception): never
-    {
+    public static function reportUnexpected(
+        LoggerInterface $logger,
+        \Throwable $exception,
+        ?TranslatorInterface $translator = null,
+    ): never {
         if ($exception instanceof AuthenticationException && !$exception instanceof CustomUserMessageAuthenticationException) {
             $logger->error('Auth0 login failed: '.$exception->getMessage(), ['exception' => $exception]);
 
             throw $exception;
         }
 
-        self::report($logger, $exception->getMessage(), $exception);
+        self::report($logger, $exception->getMessage(), $exception, null, $translator);
     }
 
     /**
      * Text shown in the login growl. The log keeps the full reason.
+     * HTML is stripped so Twig |purify cannot wipe the flash content.
      */
     public static function shortMessage(string $reason): string
     {
-        $short = trim($reason);
+        $short = trim(html_entity_decode(strip_tags($reason), ENT_QUOTES | ENT_HTML5));
         if ('' === $short) {
             $short = 'Auth0 login failed.';
         }

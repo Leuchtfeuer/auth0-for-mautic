@@ -48,7 +48,7 @@ class UserSubscriber implements EventSubscriberInterface
         } catch (CustomUserMessageAuthenticationException $exception) {
             throw $exception;
         } catch (\Throwable $exception) {
-            LoginFailure::reportUnexpected($this->logger, $exception);
+            LoginFailure::reportUnexpected($this->logger, $exception, $this->translator);
         }
     }
 
@@ -75,7 +75,13 @@ class UserSubscriber implements EventSubscriberInterface
         } elseif ($result instanceof Response) {
             $event->setResponse($result);
         } elseif ($loginCheck) {
-            LoginFailure::report($this->logger, $this->translator->trans('plugin.auth0.login_failed_no_user'));
+            LoginFailure::report(
+                $this->logger,
+                $this->translator->trans('plugin.auth0.login_failed_no_user'),
+                null,
+                null,
+                $this->translator
+            );
         }
     }
 
@@ -87,7 +93,7 @@ class UserSubscriber implements EventSubscriberInterface
         }
 
         if (is_string($reason) && '' !== $reason) {
-            LoginFailure::report($this->logger, $reason);
+            LoginFailure::report($this->logger, $reason, null, null, $this->translator);
         }
     }
 

@@ -488,6 +488,6 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 
     private function failLogin(string $reason, ?\Throwable $previous = null, ?string $userMessage = null): never
     {
-        LoginFailure::report($this->logger, $reason, $previous, $userMessage);
+        LoginFailure::report($this->logger, $reason, $previous, $userMessage, $this->translator);
     }
 }

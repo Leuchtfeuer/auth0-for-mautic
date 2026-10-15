@@ -33,7 +33,15 @@ final class UserSubscriberTest extends TestCase
         $this->coreParametersHelper = $this->createMock(CoreParametersHelper::class);
         $this->logger               = $this->createMock(LoggerInterface::class);
         $this->translator           = $this->createMock(TranslatorInterface::class);
-        $this->subscriber           = new UserSubscriber($this->coreParametersHelper, $this->logger, $this->translator);
+        $this->translator->method('trans')
+            ->willReturnCallback(static function (string $id, array $parameters = []): string {
+                return match ($id) {
+                    'plugin.auth0.login_failed_no_user' => 'Auth0 login did not return a user.',
+                    'plugin.auth0.login_failed'         => 'Auth0 login failed: '.($parameters['%reason%'] ?? ''),
+                    default                             => $id,
+                };
+            });
+        $this->subscriber = new UserSubscriber($this->coreParametersHelper, $this->logger, $this->translator);
     }
 
     public function testGetSubscribedEvents(): void
@@ -216,11 +224,6 @@ final class UserSubscriberTest extends TestCase
         $event->method('getRequest')
             ->willReturn(new Request());
 
-        $this->translator->expects(self::once())
-            ->method('trans')
-            ->with('plugin.auth0.login_failed_no_user')
-            ->willReturn('Auth0 login did not return a user.');
-
         $this->logger->expects(self::once())
             ->method('error')
             ->with('Auth0 login failed: Auth0 login did not return a user.');
@@ -236,7 +239,8 @@ final class UserSubscriberTest extends TestCase
             $this->subscriber->onUserAuthentication($event);
             self::fail('A login that returns no user must be reported.');
         } catch (CustomUserMessageAuthenticationException $exception) {
-            self::assertSame(['%reason%' => 'Auth0 login did not return a user.'], $exception->getMessageData());
+            self::assertSame('Auth0 login failed: Auth0 login did not return a user.', $exception->getMessage());
+            self::assertSame([], $exception->getMessageData());
         }
     }
 
@@ -269,7 +273,8 @@ final class UserSubscriberTest extends TestCase
             $this->subscriber->onUserAuthentication($event);
             self::fail('An Auth0 callback error must be reported.');
         } catch (CustomUserMessageAuthenticationException $exception) {
-            self::assertSame(['%reason%' => 'User denied access'], $exception->getMessageData());
+            self::assertSame('Auth0 login failed: User denied access', $exception->getMessage());
+            self::assertSame([], $exception->getMessageData());
         }
     }
 
@@ -303,11 +308,11 @@ final class UserSubscriberTest extends TestCase
             $this->subscriber->onUserAuthentication($event);
             self::fail('An unexpected login error must be reported.');
         } catch (CustomUserMessageAuthenticationException $exception) {
-            self::assertSame('plugin.auth0.login_failed', $exception->getMessageKey());
             self::assertSame(
-                ['%reason%' => 'Auth0 userinfo failed: HTTP 401: access_denied'],
-                $exception->getMessageData()
+                'Auth0 login failed: Auth0 userinfo failed: HTTP 401: access_denied',
+                $exception->getMessage()
             );
+            self::assertSame([], $exception->getMessageData());
         }
     }
 

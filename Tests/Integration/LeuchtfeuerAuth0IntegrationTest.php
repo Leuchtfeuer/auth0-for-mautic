@@ -346,7 +346,11 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
             $integration->getUser(['token_type' => 'Bearer', 'access_token' => 'access']);
             self::fail('Auth0 transport failure must be reported to the user.');
         } catch (CustomUserMessageAuthenticationException $exception) {
-            self::assertSame(['%reason%' => 'request to Auth0 failed: connection refused'], $exception->getMessageData());
+            self::assertSame(
+                'Auth0 login failed: request to Auth0 failed: connection refused',
+                $exception->getMessage()
+            );
+            self::assertSame([], $exception->getMessageData());
         }
     }
 
@@ -369,9 +373,10 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
             self::fail('Auth0 error response must be reported to the user.');
         } catch (CustomUserMessageAuthenticationException $exception) {
             self::assertSame(
-                ['%reason%' => 'Auth0 userinfo failed: HTTP 401: access_denied: Unauthorized'],
-                $exception->getMessageData()
+                'Auth0 login failed: Auth0 userinfo failed: HTTP 401: access_denied: Unauthorized',
+                $exception->getMessage()
             );
+            self::assertSame([], $exception->getMessageData());
         }
     }
 
@@ -379,12 +384,16 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
     {
         $accessSettings = ['domain' => 'dom.ain', 'client_secret' => 'Secret!', 'client_id' => 'client id!', 'audience' => 'The audience'];
         $token          = ['token_type' => 'type', 'access_token' => 'access'];
-        $integration    = $this->integrationWithKeys($accessSettings);
-        $translator     = $this->createMock(TranslatorInterface::class);
-        $translator->expects(self::once())
-            ->method('trans')
-            ->with('plugin.auth0.login_failed_subject_mismatch')
-            ->willReturn('Auth0 user does not match the authenticated subject.');
+        $integration = $this->integrationWithKeys($accessSettings);
+        $translator  = $this->createMock(TranslatorInterface::class);
+        $translator->method('trans')
+            ->willReturnCallback(static function (string $id, array $parameters = []): string {
+                return match ($id) {
+                    'plugin.auth0.login_failed_subject_mismatch' => 'Auth0 user does not match the authenticated subject.',
+                    'plugin.auth0.login_failed'                  => 'Auth0 login failed: '.($parameters['%reason%'] ?? ''),
+                    default                                      => $id,
+                };
+            });
         $this->setProperty($integration, 'translator', $translator);
         $this->expectLog($integration, 'Auth0 user does not match the authenticated subject.');
 
@@ -394,7 +403,11 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
             $integration->getUser($token);
             self::fail('A mismatched Auth0 user must be reported to the user.');
         } catch (CustomUserMessageAuthenticationException $exception) {
-            self::assertSame(['%reason%' => 'Auth0 user does not match the authenticated subject.'], $exception->getMessageData());
+            self::assertSame(
+                'Auth0 login failed: Auth0 user does not match the authenticated subject.',
+                $exception->getMessage()
+            );
+            self::assertSame([], $exception->getMessageData());
         }
     }
 
@@ -412,6 +425,17 @@ class LeuchtfeuerAuth0IntegrationTest extends TestCase
             ->willReturn($accessSettings);
 
         $integration->setIntegrationSettings($this->createMock(Integration::class));
+
+        $translator = $this->createMock(TranslatorInterface::class);
+        $translator->method('trans')
+            ->willReturnCallback(static function (string $id, array $parameters = []): string {
+                if (isset($parameters['%reason%'])) {
+                    return 'Auth0 login failed: '.$parameters['%reason%'];
+                }
+
+                return $id;
+            });
+        $this->setProperty($integration, 'translator', $translator);
 
         return $integration;
     }
