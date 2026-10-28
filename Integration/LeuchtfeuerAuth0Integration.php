@@ -229,7 +229,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
                     'grant_type'    => 'client_credentials',
                     'client_id'     => $this->keys['client_id'],
                     'client_secret' => $this->keys['client_secret'],
-                    'audience'      => 'https://'.rtrim($this->keys['domain'], '/').'/'.trim($this->keys['audience'], '/').'/',
+                    'audience'      => $this->getManagementAudience($this->keys['audience'], $this->keys['domain']),
                 ],
                 'http_errors' => false,
             ]
@@ -265,7 +265,7 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
 
         $response = $this->client->request(
             'GET',
-            trim($this->keys['audience'], '/').'/users/'.$userId,
+            $this->getManagementApiPath($this->keys['audience']).'/users/'.$userId,
             [
                 'headers' => [
                     'Authorization' => $managementToken['token_type'].' '.$managementToken['access_token'],
@@ -275,6 +275,46 @@ class LeuchtfeuerAuth0Integration extends AbstractSsoServiceIntegration
         );
 
         return $this->decodeAuth0Response('user profile', $response);
+    }
+
+    /**
+     * Audience (API identifier) used to request the Management API token.
+     *
+     * Auth0 always uses the canonical tenant domain (for example my-tenant.eu.auth0.com) as the
+     * identifier of the Management API. This is also true when a custom domain is used for login.
+     * For this reason the audience can be a full URL, for example https://my-tenant.eu.auth0.com/api/v2/.
+     * A plain path such as /api/v2/ is still supported. It is added to the configured domain.
+     */
+    private function getManagementAudience(string $audience, string $domain): string
+    {
+        $audience = trim($audience);
+
+        if ($this->isAbsoluteUrl($audience)) {
+            return rtrim($audience, '/').'/';
+        }
+
+        return 'https://'.rtrim($domain, '/').'/'.trim($audience, '/').'/';
+    }
+
+    /**
+     * Path of the Management API, relative to the configured domain (for example api/v2).
+     */
+    private function getManagementApiPath(string $audience): string
+    {
+        $audience = trim($audience);
+
+        if ($this->isAbsoluteUrl($audience)) {
+            $path = parse_url($audience, PHP_URL_PATH);
+
+            return is_string($path) ? trim($path, '/') : '';
+        }
+
+        return trim($audience, '/');
+    }
+
+    private function isAbsoluteUrl(string $value): bool
+    {
+        return 1 === preg_match('#^https?://#i', $value);
     }
 
     /**
