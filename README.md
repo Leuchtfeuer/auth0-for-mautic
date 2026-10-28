@@ -121,6 +121,7 @@ When updating the plugin, please make sure to change the callback URL from `../s
 When updating the plugin, please make sure to change the callback URL from `../s/sso_login/Auth0` to `../s/sso_login/LeuchtfeuerAuth0` in your Auth0 application settings.
 
 ## Known Issues
+In Mautic5 the correctly writes errors into the log, but does not populate them into the notifcation recevied upon failed login
 
 ## Troubleshooting
 Make sure you have not only installed but also enabled the Plugin.
